@@ -107,3 +107,8 @@ body {
     padding: 30px 20px;
   }
 }
+
+.form-alert {
+  color: red;
+  margin-bottom: 10px;
+}

@@ -2,6 +2,10 @@
   <%= form_tag(login_path, method: :post) do %>
     <h2>Login</h2>
 
+    <% if flash[:alert] %>
+      <div class="form-alert alert"><%= flash[:alert] %></div>
+    <% end %>
+
     <div class="form-group">
       <%= label_tag :email, "Email" %>
       <%= email_field_tag :email, nil, required: true, placeholder: "Enter your email" %>
