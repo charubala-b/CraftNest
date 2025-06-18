@@ -1,0 +1,13 @@
+# Read about fixtures at https://api.rubyonrails.org/classes/ActiveRecord/FixtureSet.html
+
+one:
+  user: one
+  project: one
+  proposed_price: 9.99
+  cover_letter: MyText
+
+two:
+  user: two
+  project: two
+  proposed_price: 9.99
+  cover_letter: MyText

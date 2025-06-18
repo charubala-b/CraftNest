@@ -1,0 +1,43 @@
+<h1>Client Dashboard</h1>
+
+<!-- Post a Project -->
+<%= link_to 'Post a New Project', new_project_path, class: "btn btn-primary" %>
+
+<!-- My Projects -->
+<h2>My Projects</h2>
+<% @projects.each do |project| %>
+  <div class="project-box">
+    <h3><%= link_to project.title, project_path(project) %></h3>
+    <p><strong>Deadline:</strong> <%= project.deadline.strftime('%d-%b-%Y') %></p>
+    
+    <!-- View Bids Received -->
+    <h4>Bids Received:</h4>
+    <% project.bids.each do |bid| %>
+      <div class="bid">
+        <p><%= bid.user.name %> proposed ₹<%= bid.proposed_price %></p>
+        <p><%= bid.cover_letter %></p>
+        <%= link_to 'Accept & Create Contract', new_contract_path(project_id: project.id, freelancer_id: bid.user.id), method: :get, class: "btn btn-success" %>
+      </div>
+    <% end %>
+  </div>
+<% end %>
+
+<!-- Contracts -->
+<h2>Contract Management</h2>
+<% @contracts.each do |contract| %>
+  <div class="contract-box">
+    <p>Project: <%= contract.project.title %></p>
+    <p>Freelancer: <%= contract.freelancer.name %></p>
+    <p>Status: <%= contract.status.humanize %></p>
+    <% if contract.inprogress? %>
+      <%= button_to 'Mark as Complete', contract_path(contract), method: :patch, params: { contract: { status: :completed } }, class: "btn btn-secondary" %>
+    <% end %>
+  </div>
+<% end %>
+
+<!-- Review Freelancers -->
+<h2>Give Reviews</h2>
+<% @freelancers_to_review.each do |contract| %>
+  <p>Review for <%= contract.freelancer.name %> on project <%= contract.project.title %>:</p>
+  <%= link_to 'Write Review', new_review_path(project_id: contract.project_id, reviewee_id: contract.freelancer_id), class: "btn btn-warning" %>
+<% end %>

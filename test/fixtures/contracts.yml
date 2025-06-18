@@ -1,0 +1,17 @@
+# Read about fixtures at https://api.rubyonrails.org/classes/ActiveRecord/FixtureSet.html
+
+one:
+  project: one
+  freelancer: one
+  client: one
+  start_date: 2025-06-18 16:06:01
+  end_date: 2025-06-18 16:06:01
+  status: 1
+
+two:
+  project: two
+  freelancer: two
+  client: two
+  start_date: 2025-06-18 16:06:01
+  end_date: 2025-06-18 16:06:01
+  status: 1
