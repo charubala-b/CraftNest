@@ -1,43 +1,115 @@
-<h1>Client Dashboard</h1>
+<%= stylesheet_link_tag "dashboard", media: "all", "data-turbo-track": "reload" %>
 
-<!-- Post a Project -->
-<%= link_to 'Post a New Project', new_project_path, class: "btn btn-primary" %>
+<% if flash[:notice] %>
+  <div class="flash notice"><%= flash[:notice] %></div>
+<% elsif flash[:alert] %>
+  <div class="flash alert"><%= flash[:alert] %></div>
+<% end %>
 
-<!-- My Projects -->
-<h2>My Projects</h2>
-<% @projects.each do |project| %>
-  <div class="project-box">
-    <h3><%= link_to project.title, project_path(project) %></h3>
-    <p><strong>Deadline:</strong> <%= project.deadline.strftime('%d-%b-%Y') %></p>
-    
-    <!-- View Bids Received -->
-    <h4>Bids Received:</h4>
-    <% project.bids.each do |bid| %>
-      <div class="bid">
-        <p><%= bid.user.name %> proposed ₹<%= bid.proposed_price %></p>
-        <p><%= bid.cover_letter %></p>
-        <%= link_to 'Accept & Create Contract', new_contract_path(project_id: project.id, freelancer_id: bid.user.id), method: :get, class: "btn btn-success" %>
+<div class="dashboard-container">
+  <h1 class="dashboard-title">Client Dashboard</h1>
+
+  <!-- 🔹 Top Navigation Tabs -->
+  <div class="dashboard-tabs">
+    <button class="tab-button active" onclick="openTab(event, 'projects')">Projects</button>
+    <button class="tab-button" onclick="openTab(event, 'contracts')">Contracts</button>
+    <button class="tab-button" onclick="openTab(event, 'messages')">Messages</button>
+  </div>
+
+  <!-- 🔹 Projects Tab -->
+  <div id="projects" class="tab-content" style="display: block;">
+    <h2 class="section-title">My Projects</h2>
+    <%= link_to 'Post New Project', new_project_path, class: 'btn btn-primary' %>
+
+    <% @projects.each do |project| %>
+      <div class="project-card">
+        <h3><%= project.title %></h3>
+        <p><%= project.description %></p>
+        <p><strong>Budget:</strong> ₹<%= project.budget %></p>
+        <p><strong>Deadline:</strong> <%= project.deadline.strftime("%d %b %Y") %></p>
+
+        <%= link_to 'Edit', edit_project_path(project), class: "btn btn-warn" %>
+        <%= button_to 'Delete', project_path(project), method: :delete, data: { confirm: 'Are you sure?' }, class: "btn btn-dan" %>
+
+        <h4>Bids</h4>
+        <% project.bids.each do |bid| %>
+          <div class="bid-card">
+            <p><strong>Freelancer:</strong> <%= bid.user.name %></p>
+            <p><strong>₹:</strong> <%= bid.proposed_price %></p>
+            <%= link_to 'Accept Bid', accept_bid_path(bid), method: :post, class: 'btn btn-success' %>
+          </div>
+        <% end %>
       </div>
     <% end %>
   </div>
-<% end %>
 
-<!-- Contracts -->
-<h2>Contract Management</h2>
-<% @contracts.each do |contract| %>
-  <div class="contract-box">
-    <p>Project: <%= contract.project.title %></p>
-    <p>Freelancer: <%= contract.freelancer.name %></p>
-    <p>Status: <%= contract.status.humanize %></p>
-    <% if contract.inprogress? %>
-      <%= button_to 'Mark as Complete', contract_path(contract), method: :patch, params: { contract: { status: :completed } }, class: "btn btn-secondary" %>
+  <!-- 🔹 Contracts Tab -->
+  <div id="contracts" class="tab-content">
+    <h2 class="section-title">My Contracts</h2>
+    <% @contracts.each do |contract| %>
+      <div class="contract-card">
+        <p><strong>Project:</strong> <%= contract.project.title %></p>
+        <p><strong>Freelancer:</strong> <%= contract.freelancer.name %></p>
+        <p><strong>Status:</strong> <%= contract.status.humanize %></p>
+
+        <% if contract.inprogress? %>
+          <%= button_to "Mark as Complete", contract_path(contract), method: :patch, params: { contract: { status: :completed } }, class: "btn btn-secondary" %>
+        <% end %>
+
+        <h4>Freelancer's Reviews</h4>
+        <% freelancer = contract.freelancer %>
+        <% freelancer.reviews_received.each do |review| %>
+          <div class="review-card">
+            <p><strong><%= review.reviewer.name %>:</strong> ⭐ <%= review.ratings %></p>
+            <p><%= review.review %></p>
+          </div>
+        <% end %>
+
+        <% if contract.completed? %>
+          <% review = contract.project.reviews.find_by(reviewer_id: @current_user.id) %>
+          <% if review.present? %>
+            <div class="review-card">
+              <p>⭐ <%= review.ratings %> - <%= review.review %></p>
+            </div>
+          <% else %>
+            <%= link_to "Write Review", new_review_path(reviewee_id: contract.freelancer_id, project_id: contract.project_id), class: "btn btn-warning" %>
+          <% end %>
+        <% end %>
+      </div>
     <% end %>
   </div>
-<% end %>
 
-<!-- Review Freelancers -->
-<h2>Give Reviews</h2>
-<% @freelancers_to_review.each do |contract| %>
-  <p>Review for <%= contract.freelancer.name %> on project <%= contract.project.title %>:</p>
-  <%= link_to 'Write Review', new_review_path(project_id: contract.project_id, reviewee_id: contract.freelancer_id), class: "btn btn-warning" %>
-<% end %>
+  <!-- 🔹 Messages Tab -->
+  <div id="messages" class="tab-content">
+    <h2 class="section-title">Messages</h2>
+
+    <%= form_with model: Message.new, url: messages_path, local: true do |f| %>
+      <div>
+        <%= f.label :receiver_id, "Send to Freelancer" %>
+        <%= f.select :receiver_id, User.freelancer.pluck(:name, :id), {}, class: "form-control" %>
+      </div>
+
+      <div>
+        <%= f.text_area :body, class: "form-control", placeholder: "Your message..." %>
+      </div>
+
+      <%= f.submit "Send", class: "btn btn-primary" %>
+    <% end %>
+
+    <% @messages.each do |msg| %>
+      <div class="message-card">
+        <strong><%= msg.sender.name %> ➝ <%= msg.receiver.name %></strong>
+        <p><%= msg.body %></p>
+      </div>
+    <% end %>
+  </div>
+</div>
+
+<script>
+function openTab(evt, tabId) {
+  document.querySelectorAll(".tab-content").forEach(el => el.style.display = "none");
+  document.querySelectorAll(".tab-button").forEach(el => el.classList.remove("active"));
+  document.getElementById(tabId).style.display = "block";
+  evt.currentTarget.classList.add("active");
+}
+</script>

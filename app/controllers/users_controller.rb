@@ -13,6 +13,15 @@ class UsersController < ApplicationController
   end
 
   def login
+    user = User.find_by(email: params[:email])
+
+    if user && user.password == params[:password]  # (no password hashing for now)
+      session[:user_id] = user.id
+      redirect_to dashboard_path, notice: "Logged in successfully"
+    else
+      flash[:alert] = "Invalid email or password"
+      render :login  # or :new_login if you named the view that way
+    end
   end
 
 def login_user
@@ -22,7 +31,8 @@ def login_user
     session[:user_id] = user.id
     redirect_to dashboard_path, notice: "Logged in!"
   else
-    redirect_to login_path, alert: "Invalid email or password"
+    flash[:alert] = "Invalid email or password"
+    render :login
   end
 end
 

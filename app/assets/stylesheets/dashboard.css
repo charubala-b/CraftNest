@@ -1,0 +1,185 @@
+/* Reset some defaults */
+body, h1, h2, h3, p {
+  margin: 0;
+  padding: 0;
+}
+
+/* Basic Page Styling */
+body {
+  background: #f0f2f5;
+  font-family: 'Segoe UI', sans-serif;
+  color: #333;
+}
+
+/* Main container centered and responsive */
+.dashboard-container {
+  max-width: 1100px;
+  margin: 40px auto;
+  padding: 30px;
+  background: #fff;
+  border-radius: 12px;
+  box-shadow: 0 0 20px rgba(0,0,0,0.05);
+}
+
+/* Typography */
+.dashboard-title {
+  font-size: 30px;
+  font-weight: bold;
+  margin-bottom: 25px;
+  color: #2c3e50;
+}
+
+.section-title {
+  font-size: 22px;
+  margin-bottom: 20px;
+  border-bottom: 2px solid #eee;
+  padding-bottom: 5px;
+  color: #444;
+}
+
+/* Sections */
+.dashboard-section {
+  margin-bottom: 50px;
+}
+
+.dashboard-post-project {
+  margin-bottom: 30px;
+}
+
+/* Cards */
+.project-card,
+.contract-card,
+.bid-card,
+.review-card,
+.comment-card,
+.message-card {
+  background: #f9f9fb;
+  padding: 20px;
+  margin-bottom: 20px;
+  border-radius: 10px;
+  border-left: 5px solid #007bff;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.03);
+}
+
+.project-title {
+  font-size: 20px;
+  margin-bottom: 10px;
+  color: #007bff;
+}
+
+.project-description {
+  margin-bottom: 8px;
+  font-size: 14px;
+  color: #555;
+}
+
+.project-actions,
+.bids-section,
+.comments-section,
+.messages-list {
+  margin-top: 12px;
+}
+
+/* Form Controls */
+.form-control,
+textarea,
+select {
+  width: 100%;
+  padding: 10px;
+  margin-top: 6px;
+  margin-bottom: 14px;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  box-sizing: border-box;
+  font-size: 14px;
+}
+
+/* Buttons */
+.btn {
+  display: inline-block;
+  padding: 8px 14px;
+  margin: 4px 6px 4px 0;
+  font-size: 14px;
+  border-radius: 6px;
+  text-decoration: none;
+  cursor: pointer;
+  transition: background 0.3s ease;
+  border: none;
+}
+
+.btn-primary { background: #007bff; color: #fff; }
+.btn-primary:hover { background: #0056b3; }
+
+.btn-success { background: #28a745; color: #fff; }
+.btn-success:hover { background: #218838; }
+
+.btn-warn { background: #ffc107; color: #212529; }
+.btn-warn:hover { background: #e0a800; }
+
+.btn-dan { background: #dc3545; color: #fff; }
+.btn-dan:hover { background: #c82333; }
+
+.btn-secondary { background: #6c757d; color: #fff; }
+.btn-secondary:hover { background: #5a6268; }
+
+.btn-outline-secondary {
+  background: none;
+  border: 1px solid #6c757d;
+  color: #6c757d;
+}
+
+.btn-outline-danger {
+  background: none;
+  border: 1px solid #dc3545;
+  color: #dc3545;
+}
+
+.btn-sm {
+  font-size: 13px;
+  padding: 5px 10px;
+}
+
+/* Responsive tweaks for laptop */
+@media (max-width: 1366px) {
+  .dashboard-container {
+    padding: 20px;
+  }
+  .project-card, .contract-card, .message-card {
+    padding: 15px;
+  }
+  .dashboard-title {
+    font-size: 26px;
+  }
+  .section-title {
+    font-size: 20px;
+  }
+}
+
+.dashboard-tabs {
+  display: flex;
+  margin-bottom: 20px;
+  gap: 10px;
+}
+
+.tab-button {
+  padding: 10px 20px;
+  background: #e9ecef;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: 500;
+  transition: background 0.3s ease;
+}
+
+.tab-button:hover {
+  background: #d6d8db;
+}
+
+.tab-button.active {
+  background: #007bff;
+  color: white;
+}
+
+.tab-content {
+  display: none;
+}

@@ -1,0 +1,18 @@
+<h2>Write Review for <%= User.find(@review.reviewee_id).name %></h2>
+
+<%= form_with model: @review, local: true do |f| %>
+  <div>
+    <%= f.label :ratings, "Rating (1-5)" %>
+    <%= f.select :ratings, (1..5).to_a, {}, class: "form-control" %>
+  </div>
+
+  <div>
+    <%= f.label :review, "Review Message" %>
+    <%= f.text_area :review, rows: 4, class: "form-control" %>
+  </div>
+
+  <%= f.hidden_field :project_id %>
+  <%= f.hidden_field :reviewee_id %>
+
+  <%= f.submit "Submit Review", class: "btn btn-primary" %>
+<% end %>

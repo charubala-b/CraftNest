@@ -1,6 +1,14 @@
+<%= stylesheet_link_tag "users", media: "all", "data-turbo-track": "reload" %>
+
 <div class="form-container">
   <%= form_with model: @user, url: register_path, class: "", local: true do |f| %>
     <h2>Register</h2>
+
+    # <% if @user.errors[:email].any? %>
+    #   <div class="form-error">
+    #     <%= @user.errors[:email].join(", ") %>
+    #   </div>
+    # <% end %>
 
     <div class="form-group">
       <%= f.label :name, "Full Name" %>
@@ -24,12 +32,12 @@
 
     <div class="form-group">
       <%= f.label :role %>
-      <%= f.select :role, User.roles.keys.map { |r| [r.titleize, r] }, {}, { required: true } %>
+      <%= f.select :role, User.roles.keys.map { |r| [r.titleize, r] }, {}, { required: true , selected: 'freelancer'} %>
     </div>
 
     <div class="form-group">
       <%= f.label :skills %>
-      <%= f.select :skills, User.skills.keys.map { |s| [s.upcase, s] }, {}, { required: true } %>
+      <%= f.select :skills, User.skills.keys.map { |s| [s.upcase, s] }, {}, { required: true , selected: 'react'} %>
     </div>
 
     <%= f.submit "Register", class: "form-submit" %>

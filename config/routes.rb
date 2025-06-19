@@ -1,16 +1,3 @@
-# Rails.application.routes.draw do
-  # get "dashboard/home"
-#   get "users/new"
-#   root "users#login"
-
-#   get "register", to: "users#new"
-#   post "register", to: "users#create"
-
-#   get "login", to: "users#login"
-#   post "login", to: "users#login_user"
-#   delete "logout", to: "users#logout"
-# end
-
 Rails.application.routes.draw do
   # Root path shows login page
   root "users#login"
@@ -23,17 +10,30 @@ Rails.application.routes.draw do
   post "login", to: "users#login_user"
   delete "logout", to: "users#logout"
 
-  # Dashboard (protected - ensure controller uses before_action to check login)
+  # Dashboard
   get "/dashboard", to: "dashboard#home"
 
-  # Messages - direct message style
+  # Messages
   get "/messages", to: "dashboard#messages"
   get "/messages/:id", to: "dashboard#chat", as: "chat"
 
-  # Profile management
+  # Profile
   get "/profile", to: "dashboard#profile"
   patch "/profile/update", to: "dashboard#update_profile"
   get "/profile/change_password", to: "dashboard#change_password"
   patch "/profile/update_password", to: "dashboard#update_password"
-end
 
+  # Nested routes for project -> bids
+  resources :projects do
+    resources :bids, only: [:index, :show]
+  end
+   resources :projects
+  # Standalone resources
+  resources :contracts, only: [:index, :update, :create, :new]
+  resources :reviews, only: [:new, :create]
+  resources :messages, only: [:create, :update]
+  resources :comments, only: [:create, :update, :destroy]
+
+  # Custom action to accept a bid
+  post '/bids/:id/accept', to: 'bids#accept', as: 'accept_bid'
+end

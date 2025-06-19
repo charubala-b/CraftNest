@@ -1,0 +1,21 @@
+body, h1, h2, h3, p {
+  margin: 0;
+  padding: 0;
+}
+
+/* Basic Page Styling */
+body {
+  background: #c1d6f7;
+  font-family: 'Segoe UI', sans-serif;
+  color: #333;
+}
+
+/* Main container centered and responsive */
+.container .mt-5{
+  max-width: 1100px;
+  margin: 40px auto;
+  padding: 30px;
+  background: #964c4c;
+  border-radius: 12px;
+  box-shadow: 0 0 20px rgba(0,0,0,0.05);
+}
