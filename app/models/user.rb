@@ -1,6 +1,5 @@
 class User < ApplicationRecord
   validates :email, presence: true, uniqueness: { case_sensitive: false, message: "is already registered" }
-  # Add other validations as needed
 
   enum role: { freelancer: 0, client: 1 }
   enum skills: { ai: 0, ml: 1, ds: 2, react: 3 }, _prefix: true
@@ -14,4 +13,8 @@ class User < ApplicationRecord
   has_many :reviews_written, class_name: "Review", foreign_key: :reviewer_id, dependent: :destroy
   has_many :reviews_received, class_name: "Review", foreign_key: :reviewee_id, dependent: :destroy
   has_many :comments, dependent: :destroy
+
+  has_many :client_contracts, class_name: 'Contract', foreign_key: 'client_id'
+
+  has_many :freelancer_contracts, class_name: 'Contract', foreign_key: 'freelancer_id'
 end

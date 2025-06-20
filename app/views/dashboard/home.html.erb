@@ -14,14 +14,16 @@
     <button class="tab-button active" onclick="openTab(event, 'projects')">Projects</button>
     <button class="tab-button" onclick="openTab(event, 'contracts')">Contracts</button>
     <button class="tab-button" onclick="openTab(event, 'messages')">Messages</button>
+    <button class="tab-button" onclick="openTab(event, 'completed_projects')">Completed Projects</button>
+
   </div>
 
   <!-- 🔹 Projects Tab -->
   <div id="projects" class="tab-content" style="display: block;">
     <h2 class="section-title">My Projects</h2>
     <%= link_to 'Post New Project', new_project_path, class: 'btn btn-primary' %>
-
-    <% @projects.each do |project| %>
+    <% if @active_projects!=nil %>
+    <% @active_projects.each do |project| %>
       <div class="project-card">
         <h3><%= project.title %></h3>
         <p><%= project.description %></p>
@@ -33,13 +35,37 @@
 
         <h4>Bids</h4>
         <% project.bids.each do |bid| %>
-          <div class="bid-card">
-            <p><strong>Freelancer:</strong> <%= bid.user.name %></p>
-            <p><strong>₹:</strong> <%= bid.proposed_price %></p>
-            <%= link_to 'Accept Bid', accept_bid_path(bid), method: :post, class: 'btn btn-success' %>
-          </div>
+        <div class="bid-card <%= 'accepted-card' if bid.accepted? %>">
+          <p><strong>Freelancer:</strong> <%= bid.user.name %></p>
+          <p><strong>₹:</strong> <%= bid.proposed_price %></p>
+
+          <% if bid.accepted? %>
+            <button class="btn btn-secondary" disabled>Accepted</button>
+          <% else %>
+            <%= button_to 'Accept Bid', accept_bid_path(bid), method: :post, class: 'btn btn-success' %>
+          <% end %>
+        </div>
         <% end %>
+        <!-- 🔹 Expand Button -->
+        <!-- Expand Comments Button -->
+        <button onclick="toggleComments('comments-<%= project.id %>', this)">▶</button> Show Comments
+
+        <!-- Comments Section -->
+        <div id="comments-<%= project.id %>" style="display: none; margin-top: 10px;">
+          <% project.comments.each do |comment| %>
+            <p><strong><%= comment.user.name %></strong>: <%= comment.body %></p>
+            <%= button_to 'Delete', comments_path(comment), method: :destroy, data: { confirm: 'Are you sure?' }, class: "btn btn-dan" %>
+
+          <% end %>
+
+          <%= form_with model: [project, Comment.new], local: true do |f| %>
+            <%= f.text_area :body, rows: 2, class: "form-control", placeholder: "Write your reply..." %>
+            <%= f.submit "Post", class: "btn btn-sm btn-primary mt-1" %>
+          <% end %>
+        </div>
+        
       </div>
+    <% end %>
     <% end %>
   </div>
 
@@ -52,20 +78,10 @@
         <p><strong>Freelancer:</strong> <%= contract.freelancer.name %></p>
         <p><strong>Status:</strong> <%= contract.status.humanize %></p>
 
-        <% if contract.inprogress? %>
-          <%= button_to "Mark as Complete", contract_path(contract), method: :patch, params: { contract: { status: :completed } }, class: "btn btn-secondary" %>
-        <% end %>
-
-        <h4>Freelancer's Reviews</h4>
-        <% freelancer = contract.freelancer %>
-        <% freelancer.reviews_received.each do |review| %>
-          <div class="review-card">
-            <p><strong><%= review.reviewer.name %>:</strong> ⭐ <%= review.ratings %></p>
-            <p><%= review.review %></p>
-          </div>
-        <% end %>
+       
 
         <% if contract.completed? %>
+          <h4>Freelancer's Review</h4>
           <% review = contract.project.reviews.find_by(reviewer_id: @current_user.id) %>
           <% if review.present? %>
             <div class="review-card">
@@ -103,6 +119,23 @@
       </div>
     <% end %>
   </div>
+
+  <!-- 🔹 Completed Projects Tab -->
+  <div id="completed_projects" class="tab-content">
+    <h2 class="section-title">Completed Projects</h2>
+
+    <% @completed_projects.each do |project| %>
+      <div class="project-card completed-card">
+        <h3><%= project.title %></h3>
+        <p><%= project.description %></p>
+        <p><strong>Budget:</strong> ₹<%= project.budget %></p>
+        <p><strong>Deadline:</strong> <%= project.deadline.strftime("%d %b %Y") %></p>
+
+        
+      </div>
+    <% end %>
+  </div>
+
 </div>
 
 <script>
@@ -113,3 +146,14 @@ function openTab(evt, tabId) {
   evt.currentTarget.classList.add("active");
 }
 </script>
+
+<script>
+  function toggleComments(id, button) {
+    const section = document.getElementById(id);
+    const isVisible = section.style.display === "block";
+    
+    section.style.display = isVisible ? "none" : "block";
+    button.textContent = isVisible ? "▶" : "▼";
+  }
+</script>
+

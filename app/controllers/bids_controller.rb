@@ -1,21 +1,31 @@
 class BidsController < ApplicationController
+  # before_action :authenticate_user!  # optional, if using Devise or a manual auth check
+
   def accept
-  bid = Bid.find(params[:id])
-  project = bid.project
+    bid = Bid.find_by(id: params[:id])
+    return redirect_to dashboard_path, alert: "Bid not found." unless bid
 
-  # Create a contract
-  Contract.create!(
-    project: project,
-    client: current_user,
-    freelancer: bid.user,
-    status: :inprogress,
-    start_date: Time.now
-  )
+    project = bid.project
 
-  # Cancel other bids
-  project.bids.where.not(id: bid.id).destroy_all
+    # Ensure current user is the client who owns the project
+    unless project.client_id == current_user.id
+      return redirect_to dashboard_path, alert: "Unauthorized action."
+    end
 
-  redirect_to dashboard_path, notice: "Bid accepted and contract created."
-end
+    ActiveRecord::Base.transaction do
+      # Mark this bid as accepted
+      bid.update!(accepted: true)
+      Contract.create!(
+        project: project,
+        client: current_user,
+        freelancer: bid.user,
+        status: :inprogress,
+        start_date: Time.current 
+      )
+    end
 
+    redirect_to dashboard_path, notice: "Bid accepted and contract created."
+  rescue ActiveRecord::RecordInvalid => e
+    redirect_to dashboard_path, alert: "Failed to accept bid: #{e.message}"
+  end
 end

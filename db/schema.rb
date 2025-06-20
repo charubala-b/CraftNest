@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.2].define(version: 2025_06_18_103657) do
+ActiveRecord::Schema[7.2].define(version: 2025_06_20_095233) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
@@ -21,18 +21,18 @@ ActiveRecord::Schema[7.2].define(version: 2025_06_18_103657) do
     t.text "cover_letter"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.boolean "accepted"
     t.index ["project_id"], name: "index_bids_on_project_id"
     t.index ["user_id"], name: "index_bids_on_user_id"
   end
 
   create_table "comments", force: :cascade do |t|
     t.text "body"
-    t.string "commentable_type", null: false
-    t.bigint "commentable_id", null: false
     t.bigint "user_id", null: false
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
-    t.index ["commentable_type", "commentable_id"], name: "index_comments_on_commentable"
+    t.bigint "project_id"
+    t.index ["project_id"], name: "index_comments_on_project_id"
     t.index ["user_id"], name: "index_comments_on_user_id"
   end
 
@@ -47,6 +47,7 @@ ActiveRecord::Schema[7.2].define(version: 2025_06_18_103657) do
     t.datetime "updated_at", null: false
     t.index ["client_id"], name: "index_contracts_on_client_id"
     t.index ["freelancer_id"], name: "index_contracts_on_freelancer_id"
+    t.index ["project_id", "client_id", "freelancer_id"], name: "index_unique_contracts", unique: true
     t.index ["project_id"], name: "index_contracts_on_project_id"
   end
 
@@ -112,6 +113,7 @@ ActiveRecord::Schema[7.2].define(version: 2025_06_18_103657) do
 
   add_foreign_key "bids", "projects"
   add_foreign_key "bids", "users"
+  add_foreign_key "comments", "projects"
   add_foreign_key "comments", "users"
   add_foreign_key "contracts", "projects"
   add_foreign_key "contracts", "users", column: "client_id"

@@ -1,6 +1,6 @@
 class Comment < ApplicationRecord
-  belongs_to :commentable, polymorphic: true
-  belongs_to :user
+  belongs_to :user  # the commenter
+  belongs_to :project
 
   validates :body, presence: true
 end

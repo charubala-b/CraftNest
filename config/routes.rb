@@ -25,11 +25,12 @@ Rails.application.routes.draw do
 
   # Nested routes for project -> bids
   resources :projects do
-    resources :bids, only: [:index, :show]
+    resources :bids
+    resources :comments,only: [:create, :destroy]
   end
    resources :projects
   # Standalone resources
-  resources :contracts, only: [:index, :update, :create, :new]
+  resources :contracts, only: [:update]
   resources :reviews, only: [:new, :create]
   resources :messages, only: [:create, :update]
   resources :comments, only: [:create, :update, :destroy]
