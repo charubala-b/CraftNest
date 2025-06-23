@@ -1,4 +1,3 @@
-
 <div id="flash-messages" class="position-fixed top-0 end-0 p-3" style="z-index: 1050;">
   <% flash.each do |key, message| %>
     <div class="alert alert-<%= key == "notice" ? "success" : "danger" %> alert-dismissible fade show" role="alert">
@@ -8,16 +7,15 @@
   <% end %>
 </div>
 
-<%= form_with model: @review, local: true, data: { turbo: false } do |f| %>
-  <%= f.hidden_field :reviewer_id, value: current_user.id %>
-  <%= f.hidden_field :reviewee_id, value: @reviewee.id %>
-  <%= f.hidden_field :project_id, value: @project.id %>
 
-  <%= f.number_field :ratings, in: 1..5, required: true, placeholder: "Rating out of 5" %>
-  <%= f.text_area :review, placeholder: "Write your review...", required: true %>
+<h2>Edit Bid for <%= @project.title %></h2>
 
-  <%= f.submit "Submit Review", class: "btn btn-primary" %>
+<%= form_with model: [@project, @bid], local: true , data: {turbo: false} do |f| %>
+  <%= f.text_area :cover_letter, placeholder: "Update your cover letter" %>
+  <%= f.number_field :proposed_price, placeholder: "New proposed price" %>
+  <%= f.submit "Update Bid", class: "btn btn-primary" %>
 <% end %>
+
 
 <script>
   document.addEventListener("DOMContentLoaded", () => {

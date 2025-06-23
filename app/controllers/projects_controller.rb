@@ -7,7 +7,6 @@ class ProjectsController < ApplicationController
   end
 
   def show
-    # @project = Project.find(params[:id])
   end
 
   def new
@@ -17,7 +16,7 @@ class ProjectsController < ApplicationController
   def create
     @project = current_user.projects.build(project_params)
     if @project.save
-      redirect_to dashboard_path
+      redirect_to dashboard_path, notice: "successfully created a project"
     else
       render :new
     end

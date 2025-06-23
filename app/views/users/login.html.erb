@@ -1,16 +1,22 @@
 <%= stylesheet_link_tag "users", media: "all", "data-turbo-track": "reload" %>
 
-<div class="form-container">
-  <%= form_tag(login_path, method: :post) do %>
-    <h2>Login</h2>
+<!-- Flash Message Section -->
+<div id="flash-messages" class="position-fixed top-0 end-0 p-3" style="z-index: 1050;">
+  <% flash.each do |key, message| %>
+    <div class="alert alert-<%= key == "notice" ? "success" : "danger" %> alert-dismissible fade show" role="alert">
+      <%= message %>
+      <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+  <% end %>
+</div>
 
-    <% if flash[:alert] %>
-      <div class="form-alert alert"><%= flash[:alert] %></div>
-    <% end %>
+<div class="form-container">
+  <%= form_tag(login_user_path, method: :post, data: { turbo: false }) do %>
+    <h2>Login</h2>
 
     <div class="form-group">
       <%= label_tag :email, "Email" %>
-      <%= email_field_tag :email, nil, required: true, placeholder: "Enter your email" %>
+      <%= email_field_tag :email, params[:email], required: true, placeholder: "Enter your email" %>
     </div>
 
     <div class="form-group">
@@ -25,3 +31,17 @@
     </div>
   <% end %>
 </div>
+
+<script>
+  document.addEventListener("DOMContentLoaded", () => {
+    const alert = document.querySelector('.alert');
+    if (alert) {
+      setTimeout(() => {
+        alert.classList.remove("show");
+        alert.classList.add("fade");
+        alert.remove();
+      }, 3000);
+    }
+  });
+</script>
+

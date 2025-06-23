@@ -4,3 +4,5 @@
 //= link_tree ../../../vendor/javascript .js
 //= link users.css
 //= link dashboard.css
+//= link chat.css
+//= link project.css

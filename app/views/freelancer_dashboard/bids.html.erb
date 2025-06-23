@@ -1,4 +1,3 @@
-
 <div id="flash-messages" class="position-fixed top-0 end-0 p-3" style="z-index: 1050;">
   <% flash.each do |key, message| %>
     <div class="alert alert-<%= key == "notice" ? "success" : "danger" %> alert-dismissible fade show" role="alert">
@@ -8,15 +7,14 @@
   <% end %>
 </div>
 
-<%= form_with model: @review, local: true, data: { turbo: false } do |f| %>
-  <%= f.hidden_field :reviewer_id, value: current_user.id %>
-  <%= f.hidden_field :reviewee_id, value: @reviewee.id %>
-  <%= f.hidden_field :project_id, value: @project.id %>
 
-  <%= f.number_field :ratings, in: 1..5, required: true, placeholder: "Rating out of 5" %>
-  <%= f.text_area :review, placeholder: "Write your review...", required: true %>
-
-  <%= f.submit "Submit Review", class: "btn btn-primary" %>
+<h1>My Sent Bids</h1>
+<% @sent_bids.each do |bid| %>
+  <div class="bid-card">
+    <h3><%= bid.project.title %></h3>
+    <p>₹ <%= bid.proposed_price %></p>
+    <p>Status: <%= bid.accepted? ? 'Accepted' : 'Pending' %></p>
+  </div>
 <% end %>
 
 <script>

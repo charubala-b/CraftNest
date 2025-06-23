@@ -1,0 +1,213 @@
+<%= stylesheet_link_tag "dashboard", media: "all", "data-turbo-track": "reload" %>
+
+<div id="flash-messages" class="position-fixed top-0 end-0 p-3" style="z-index: 1050;">
+  <% flash.each do |key, message| %>
+    <div class="alert alert-<%= key == "notice" ? "success" : "danger" %> alert-dismissible fade show" role="alert">
+      <%= message %>
+      <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+  <% end %>
+</div>
+
+<div class="dashboard-container">
+  <h1 class="dashboard-title">Freelancer Dashboard</h1>
+
+  <!-- Navigation Tabs -->
+  <div class="dashboard-tabs">
+    <button class="tab-button active" onclick="openTab(event, 'projects')">Projects</button>
+    <button class="tab-button" onclick="openTab(event, 'bids')">My Bids</button>
+    <button class="tab-button" onclick="openTab(event, 'contracts')">Contracts</button>
+    <button class="tab-button" onclick="openTab(event, 'messages')">Messages</button>
+  </div>
+
+  <!-- Projects Tab -->
+  <div id="projects" class="tab-content" style="display: block;">
+    <% @available_projects.each do |project| %>
+      <div class="project-card">
+        <h3><%= project.title %></h3>
+        <p><%= project.description %></p>
+        <p><strong>Budget:</strong> ₹<%= project.budget %></p>
+        <p><strong>Deadline:</strong> <%= project.deadline.strftime("%d %b %Y") %></p>
+
+        <%= form_with url: submit_bid_path(project.id), local: true , data: { turbo: false } do |f| %>
+          <%= f.hidden_field :user_id, value: current_user.id %>
+          <%= f.text_area :cover_letter, placeholder: "Enter your cover letter drive link " %>
+          <%= f.number_field :proposed_price, placeholder: "Proposed Price" %>
+          <%= f.submit "Send Bid", class: "btn btn-primary" %>
+        <% end %>
+
+        <!-- Comments -->
+        <button onclick="toggleComments('comments-<%= project.id %>', this)">▶</button> Show Comments
+
+        <div id="comments-<%= project.id %>" style="display: none; margin-top: 10px;">
+          <% project.comments.where(parent_id: nil).each do |comment| %>
+            <div class="comment-block">
+              <p><strong><%= comment.user.name %>:</strong> <%= comment.body %></p>
+
+              <!-- Reply toggle -->
+              <button onclick="toggleReplyForm(<%= comment.id %>)" class="btn btn-sm btn-light">Reply</button>
+
+              <!-- Reply Form -->
+              <div id="reply-form-<%= comment.id %>" style="display: none;">
+                <%= form_with model: [project, Comment.new], local: true do |f| %>
+                  <%= f.hidden_field :parent_id, value: comment.id %>
+                  <%= f.text_area :body, rows: 2, class: "form-control", placeholder: "Write your reply..." %>
+                  <%= f.submit "Reply", class: "btn btn-sm btn-primary mt-1" %>
+                <% end %>
+              </div>
+
+              <!-- Replies -->
+              <% comment.replies.each do |reply| %>
+                <div class="reply" style="margin-left: 20px;">
+                  <p><strong><%= reply.user.name %>:</strong> <em>@<%= comment.user.name %></em> - <%= reply.body %></p>
+                </div>
+              <% end %>
+
+              </div>
+          <% end %>
+
+          <!-- Add New Comment -->
+          <%= form_with model: [project, Comment.new], local: true do |f| %>
+            <%= f.text_area :body, rows: 2, placeholder: "Add a comment...", class: "form-control" %>
+            <%= f.submit "Post", class: "btn btn-sm btn-success mt-1" %>
+          <% end %>
+        </div>
+      </div>
+    <% end %>
+  </div>
+
+<!-- Bids Tab -->
+<div id="bids" class="tab-content">
+  <% current_user.bids.each do |bid| %>
+    <% if bid.accepted %>
+      <div class="bid-card accepted-bid">
+        <button class="toggle-btn" onclick="toggleBidDetails('bid-<%= bid.id %>', this)">▶</button>
+        <h4><strong>Project: <%= bid.project.title %></strong></h4> <span style="color: green;">Accepted ✅</span>
+
+        <div id="bid-<%= bid.id %>" class="bid-details" style="display: none; margin-top: 10px;">
+          <p>💬 <strong>Cover Letter:</strong> <%= bid.cover_letter %></p>
+          <p>💰 <strong>Proposed Price:</strong> ₹<%= bid.proposed_price %></p>
+          <p>📅 <strong>Deadline:</strong> <%= bid.project.deadline.strftime("%d %b %Y") %></p>
+        </div>
+      </div>
+    <% else %>
+      <div class="bid-card pending-bid">
+        <h4><strong>Project: <%= bid.project.title %></strong></h4>
+        <p>💬 <strong>Cover Letter:</strong> <%= bid.cover_letter %></p>
+        <p>💰 <strong>Proposed Price:</strong> ₹<%= bid.proposed_price %></p>
+        <p>📅 <strong>Deadline:</strong> <%= bid.project.deadline.strftime("%d %b %Y") %></p>
+        <p>Status: 🕒 Pending</p>
+
+        <div class="bid-actions">
+          <%= link_to "Edit", edit_project_bid_path(bid.project_id, bid), class: "btn btn-sm btn-warning" %>
+          <%= button_to "Delete", project_bid_path(bid.project_id, bid), method: :delete, data: { confirm: "Are you sure?" }, class: "btn btn-sm btn-danger" %>
+        </div>
+      </div>
+    <% end %>
+  <% end %>
+</div>
+
+
+
+
+  <!-- Contracts Tab -->
+  <div id="contracts" class="tab-content">
+    <% @contracts.each do |contract| %>
+      <div class="contract-card">
+        <p><strong>Project:</strong> <%= contract.project.title %></p>
+        <p><strong>Client:</strong> <%= contract.client.name %></p>
+        <p><strong>Status:</strong> <%= contract.status.humanize %></p>
+
+        <% if contract.completed? %>
+        <div class="review-section">
+          <!-- ✅ Client's review for Freelancer -->
+          <h4>Client's Review for Freelancer</h4>
+          <% client_review = contract.project.reviews.find_by(reviewer_id: contract.client_id) %>
+          <% if client_review.present? %>
+            <div class="review-card">
+              <p>⭐ <%= client_review.ratings %> - <%= client_review.review %></p>
+              <p><em>by <%= contract.client.name %></em></p>
+            </div>
+          <% else %>
+            <% if current_user.id == contract.client_id %>
+              <%= link_to "Write Review for Freelancer", new_review_path(reviewee_id: contract.freelancer_id, project_id: contract.project_id), class: "btn btn-warning" %>
+            <% end %>
+          <% end %>
+
+          <!-- ✅ Freelancer's review for Client -->
+          <h4>Freelancer's Review for Client</h4>
+          <% freelancer_review = contract.project.reviews.find_by(reviewer_id: contract.freelancer_id) %>
+          <% if freelancer_review.present? %>
+            <div class="review-card">
+              <p>⭐ <%= freelancer_review.ratings %> - <%= freelancer_review.review %></p>
+              <p><em>by <%= contract.freelancer.name %></em></p>
+            </div>
+          <% else %>
+            <% if current_user.id == contract.freelancer_id %>
+              <%= link_to "Write Review for Client", new_review_path(reviewee_id: contract.client_id, project_id: contract.project_id), class: "btn btn-warning" %>
+            <% end %>
+          <% end %>
+        </div>
+        <% end %>
+
+      </div>
+    <% end %>
+  </div>
+
+  <!-- Messages Tab -->
+  <div id="messages" class="tab-content">
+    <% @contracts.each do |contract| %>
+      <% if contract.freelancer_id == current_user.id %>
+        <div class="chat-link-card">
+          <%= link_to freelancer_chat_room_path(contract.client_id, contract.project_id), class: "chat-link-button" do %>
+            💬 <strong><%= contract.client.name %></strong> on <em><%= contract.project.title %></em>
+          <% end %>
+        </div>
+      <% end %>
+    <% end %>
+  </div>
+</div>
+
+<!-- Tab Switcher + Comment Toggle -->
+<script>
+  function openTab(evt, tabId) {
+    document.querySelectorAll(".tab-content").forEach(el => el.style.display = "none");
+    document.querySelectorAll(".tab-button").forEach(el => el.classList.remove("active"));
+    document.getElementById(tabId).style.display = "block";
+    evt.currentTarget.classList.add("active");
+  }
+
+  function toggleComments(id, button) {
+    const section = document.getElementById(id);
+    const isVisible = section.style.display === "block";
+    section.style.display = isVisible ? "none" : "block";
+    button.textContent = isVisible ? "▶" : "▼";
+  }
+
+  function toggleReplyForm(commentId) {
+    const form = document.getElementById(`reply-form-${commentId}`);
+    form.style.display = (form.style.display === "none" || !form.style.display) ? "block" : "none";
+  }
+</script>
+
+<script>
+  document.addEventListener("DOMContentLoaded", () => {
+    const alert = document.querySelector('.alert');
+    if (alert) {
+      setTimeout(() => {
+        alert.classList.remove("show");
+        alert.classList.add("fade");
+        alert.remove();
+      }, 3000);
+    }
+  });
+</script>
+
+<script>
+  function toggleBidDetails(id, btn) {
+    const section = document.getElementById(id);
+    const visible = section.style.display === 'block';
+    section.style.display = visible ? 'none' : 'block';
+    btn.textContent = visible ? '▶' : '▼';
+  }
+</script>

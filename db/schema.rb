@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.2].define(version: 2025_06_20_095233) do
+ActiveRecord::Schema[7.2].define(version: 2025_06_22_155825) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
@@ -32,6 +32,7 @@ ActiveRecord::Schema[7.2].define(version: 2025_06_20_095233) do
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.bigint "project_id"
+    t.integer "parent_id"
     t.index ["project_id"], name: "index_comments_on_project_id"
     t.index ["user_id"], name: "index_comments_on_user_id"
   end
@@ -57,6 +58,8 @@ ActiveRecord::Schema[7.2].define(version: 2025_06_20_095233) do
     t.text "body"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.bigint "project_id"
+    t.index ["project_id"], name: "index_messages_on_project_id"
     t.index ["receiver_id"], name: "index_messages_on_receiver_id"
     t.index ["sender_id"], name: "index_messages_on_sender_id"
   end
@@ -118,6 +121,7 @@ ActiveRecord::Schema[7.2].define(version: 2025_06_20_095233) do
   add_foreign_key "contracts", "projects"
   add_foreign_key "contracts", "users", column: "client_id"
   add_foreign_key "contracts", "users", column: "freelancer_id"
+  add_foreign_key "messages", "projects"
   add_foreign_key "messages", "users", column: "receiver_id"
   add_foreign_key "messages", "users", column: "sender_id"
   add_foreign_key "project_skills", "projects"

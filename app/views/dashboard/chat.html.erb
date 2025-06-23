@@ -1,0 +1,51 @@
+<%= stylesheet_link_tag "chat", media: "all", "data-turbo-track": "reload" %>
+<div id="flash-messages" class="position-fixed top-0 end-0 p-3" style="z-index: 1050;">
+  <% flash.each do |key, message| %>
+    <div class="alert alert-<%= key == "notice" ? "success" : "danger" %> alert-dismissible fade show" role="alert">
+      <%= message %>
+      <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+  <% end %>
+</div>
+
+
+<div class="chat-container">
+  <div class="chat-header">
+    Chat with <%= @freelancer.name %> on <%= @project.title %>
+  </div>
+
+  <div class="chat-messages">
+    <% if @messages.empty? %>
+      <p class="no-messages">No messages yet.</p>
+    <% else %>
+      <% @messages.each do |msg| %>
+        <div class="message <%= msg.sender_id == @current_user.id ? 'sent' : 'received' %>">
+          <%= msg.body %>
+        </div>
+      <% end %>
+    <% end %>
+  </div>
+
+  <div class="chat-input">
+    <%= form_with model: @new_message, url: messages_path, local: true , data: { turbo: false } do |f| %>
+      <%= f.hidden_field :sender_id, value: @current_user.id %>
+      <%= f.hidden_field :receiver_id, value: @freelancer.id %>
+      <%= f.hidden_field :project_id, value: @project.id %>
+      <%= f.text_area :body, rows: 1, placeholder: "Type a message..." %>
+      <%= f.submit "Send", class: "btn btn-primary" %>
+    <% end %>
+  </div>
+</div>
+
+<script>
+  document.addEventListener("DOMContentLoaded", () => {
+    const alert = document.querySelector('.alert');
+    if (alert) {
+      setTimeout(() => {
+        alert.classList.remove("show");
+        alert.classList.add("fade");
+        alert.remove();
+      }, 3000);
+    }
+  });
+</script>

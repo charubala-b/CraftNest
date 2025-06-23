@@ -8,35 +8,34 @@ class UsersController < ApplicationController
     if @user.save
       redirect_to login_path, notice: "Registered successfully!"
     else
+      flash.now[:alert] = "Invalid info !"
       render :new
     end
   end
 
   def login
+  end
+
+
+  def login_user
     user = User.find_by(email: params[:email])
 
-    if user && user.password == params[:password]  # (no password hashing for now)
+    if user && user.password == params[:password]
       session[:user_id] = user.id
-      redirect_to dashboard_path, notice: "Logged in successfully"
+
+      if user.client?
+        
+        redirect_to client_dashboard_path, notice: "Welcome, Client!"
+      elsif user.freelancer?
+        redirect_to freelancer_dashboard_path, notice: "Welcome, Freelancer!"
+      else
+        redirect_to root_path, alert: "Unknown role."
+      end
     else
-      flash[:alert] = "Invalid email or password"
-      render :login  # or :new_login if you named the view that way
+      flash.now[:alert] = "Invalid email or password"
+      render :login
     end
   end
-
-def login_user
-  user = User.find_by(email: params[:email])
-
-  if user && user.password == params[:password]
-    session[:user_id] = user.id
-    redirect_to dashboard_path, notice: "Logged in!"
-  else
-    flash[:alert] = "Invalid email or password"
-    render :login
-  end
-end
-
-
 
   def logout
     session[:user_id] = nil
@@ -46,7 +45,7 @@ end
   private
 
   def user_params
-  params.require(:user).permit(:name, :email, :password, :role, :skills)
+    params.require(:user).permit(:name, :email, :password, :role, :skills)
+  end
 end
 
-end

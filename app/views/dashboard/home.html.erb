@@ -1,10 +1,14 @@
 <%= stylesheet_link_tag "dashboard", media: "all", "data-turbo-track": "reload" %>
 
-<% if flash[:notice] %>
-  <div class="flash notice"><%= flash[:notice] %></div>
-<% elsif flash[:alert] %>
-  <div class="flash alert"><%= flash[:alert] %></div>
-<% end %>
+<div id="flash-messages" class="position-fixed top-0 end-0 p-3" style="z-index: 1050;">
+  <% flash.each do |key, message| %>
+    <div class="alert alert-<%= key == "notice" ? "success" : "danger" %> alert-dismissible fade show" role="alert">
+      <%= message %>
+      <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+  <% end %>
+</div>
+
 
 <div class="dashboard-container">
   <h1 class="dashboard-title">Client Dashboard</h1>
@@ -41,8 +45,6 @@
 
           <% if bid.accepted? %>
             <button class="btn btn-secondary" disabled>Accepted</button>
-          <% else %>
-            <%= button_to 'Accept Bid', accept_bid_path(bid), method: :post, class: 'btn btn-success' %>
           <% end %>
         </div>
         <% end %>
@@ -52,17 +54,35 @@
 
         <!-- Comments Section -->
         <div id="comments-<%= project.id %>" style="display: none; margin-top: 10px;">
-          <% project.comments.each do |comment| %>
-            <p><strong><%= comment.user.name %></strong>: <%= comment.body %></p>
-            <%= button_to 'Delete', comments_path(comment), method: :destroy, data: { confirm: 'Are you sure?' }, class: "btn btn-dan" %>
+          <% project.comments.where(parent_id: nil).each do |comment| %>
+            <div class="comment-block">
+              <p><strong><%= comment.user.name %>:</strong> <%= comment.body %></p>
 
-          <% end %>
+              <!-- Reply form toggle button -->
+              <button onclick="toggleReplyForm(<%= comment.id %>)" class="btn btn-sm btn-light">Reply</button>
 
-          <%= form_with model: [project, Comment.new], local: true do |f| %>
-            <%= f.text_area :body, rows: 2, class: "form-control", placeholder: "Write your reply..." %>
-            <%= f.submit "Post", class: "btn btn-sm btn-primary mt-1" %>
+              <!-- Reply form -->
+              <div id="reply-form-<%= comment.id %>" style="display: none; margin-top: 5px;">
+                <%= form_with model: [project, Comment.new], local: true do |f| %>
+                  <%= f.hidden_field :parent_id, value: comment.id %>
+                  <%= f.text_area :body, rows: 2, class: "form-control", placeholder: "Write your reply..." %>
+                  <%= f.submit "Post Reply", class: "btn btn-sm btn-primary mt-1" %>
+                <% end %>
+              </div>
+
+              <!-- Show replies -->
+              <% comment.replies.each do |reply| %>
+                <div class="reply" style="margin-left: 20px; margin-top: 5px;">
+                  <p><strong><%= reply.user.name %> (reply):</strong> <em>@<%= comment.user.name %></em> - <%= reply.body %></p>
+                  <%= button_to 'Delete', comment_path(reply), method: :delete, data: { confirm: 'Are you sure?' }, class: "btn btn-sm btn-danger" %>
+                </div>
+              <% end %>
+
+              <%= button_to 'Delete', comment_path(comment), method: :delete, data: { confirm: 'Are you sure?' }, class: "btn btn-sm btn-danger mt-1" %>
+            </div>
           <% end %>
         </div>
+
         
       </div>
     <% end %>
@@ -97,27 +117,20 @@
 
   <!-- 🔹 Messages Tab -->
   <div id="messages" class="tab-content">
-    <h2 class="section-title">Messages</h2>
 
-    <%= form_with model: Message.new, url: messages_path, local: true do |f| %>
-      <div>
-        <%= f.label :receiver_id, "Send to Freelancer" %>
-        <%= f.select :receiver_id, User.freelancer.pluck(:name, :id), {}, class: "form-control" %>
-      </div>
-
-      <div>
-        <%= f.text_area :body, class: "form-control", placeholder: "Your message..." %>
-      </div>
-
-      <%= f.submit "Send", class: "btn btn-primary" %>
-    <% end %>
-
-    <% @messages.each do |msg| %>
-      <div class="message-card">
-        <strong><%= msg.sender.name %> ➝ <%= msg.receiver.name %></strong>
-        <p><%= msg.body %></p>
+<div class="chat-list">
+  <% @contracts.each do |contract| %>
+    <% if contract.client_id == @current_user.id %>
+      <div class="chat-link-card">
+        <%= link_to chat_room_path(contract.freelancer_id, contract.project_id), class: "chat-link-button" do %>
+          💬 <strong><%= contract.freelancer.name %></strong> on <em><%= contract.project.title %></em>
+        <% end %>
       </div>
     <% end %>
+  <% end %>
+</div>
+
+
   </div>
 
   <!-- 🔹 Completed Projects Tab -->
@@ -145,9 +158,7 @@ function openTab(evt, tabId) {
   document.getElementById(tabId).style.display = "block";
   evt.currentTarget.classList.add("active");
 }
-</script>
 
-<script>
   function toggleComments(id, button) {
     const section = document.getElementById(id);
     const isVisible = section.style.display === "block";
@@ -155,5 +166,22 @@ function openTab(evt, tabId) {
     section.style.display = isVisible ? "none" : "block";
     button.textContent = isVisible ? "▶" : "▼";
   }
+
+  function toggleReplyForm(commentId) {
+    const replyForm = document.getElementById(`reply-form-${commentId}`);
+    replyForm.style.display = (replyForm.style.display === "none" || !replyForm.style.display) ? "block" : "none";
+  }
 </script>
 
+<script>
+  document.addEventListener("DOMContentLoaded", () => {
+    const alert = document.querySelector('.alert');
+    if (alert) {
+      setTimeout(() => {
+        alert.classList.remove("show");
+        alert.classList.add("fade");
+        alert.remove();
+      }, 3000);
+    }
+  });
+</script>
