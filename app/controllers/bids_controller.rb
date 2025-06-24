@@ -5,7 +5,7 @@ class BidsController < ApplicationController
     return redirect_to dashboard_path, alert: "Bid not found." unless bid
 
     project = bid.project
-
+    end_date = bid.project.deadline
     unless project.client_id == current_user.id
       return redirect_to dashboard_path, alert: "Unauthorized action."
     end
@@ -16,8 +16,9 @@ class BidsController < ApplicationController
         project: project,
         client: current_user,
         freelancer: bid.user,
-        status: :inprogress,
-        start_date: Time.current 
+        status: :active,
+        start_date: Time.current, 
+        end_date: end_date
       )
     end
 
@@ -26,24 +27,21 @@ class BidsController < ApplicationController
     redirect_to dashboard_path, alert: "Failed to accept bid: #{e.message}"
   end
 
- def create
+def create
   @project = Project.find(params[:project_id])
   @bid = @project.bids.build(bid_params)
-  @bid.user = current_user           # ensure the current freelancer is attached
-  @bid.accepted = false              # set default value
+  @bid.user = current_user
+  @bid.accepted = false
 
   if @bid.save
     flash[:notice] = "Bid submitted successfully"
-    if current_user.freelancer?
-      redirect_to freelancer_dashboard_path
-    else
-      redirect_to dashboard_path
-    end
+    redirect_to current_user.freelancer? ? freelancer_dashboard_path : dashboard_path
   else
-    flash[:alert] = "Failed to submit bid"
+    flash[:alert] = @bid.errors.full_messages.join(", ")
     redirect_back fallback_location: root_path
   end
 end
+
 
 def edit
   @project = Project.find(params[:project_id])

@@ -43,11 +43,11 @@ h2 {
 }
 
 .flash.notice {
-  background-color: #4CAF50; /* green */
+  background-color: #4CAF50;
 }
 
 .flash.alert {
-  background-color: #f44336; /* red */
+  background-color: #f44336;
 }
 
 @keyframes fadeOut {

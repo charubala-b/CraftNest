@@ -1,3 +1,4 @@
+<%= stylesheet_link_tag "review", media: "all", "data-turbo-track": "reload" %>
 
 <div id="flash-messages" class="position-fixed top-0 end-0 p-3" style="z-index: 1050;">
   <% flash.each do |key, message| %>
@@ -8,16 +9,22 @@
   <% end %>
 </div>
 
-<%= form_with model: @review, local: true, data: { turbo: false } do |f| %>
-  <%= f.hidden_field :reviewer_id, value: current_user.id %>
-  <%= f.hidden_field :reviewee_id, value: @reviewee.id %>
-  <%= f.hidden_field :project_id, value: @project.id %>
+<div class="review-form-container">
+  <%= form_with model: @review, local: true, data: { turbo: false } do |f| %>
+    <%= f.hidden_field :reviewer_id, value: current_user.id %>
+    <%= f.hidden_field :reviewee_id, value: @reviewee.id %>
+    <%= f.hidden_field :project_id, value: @project.id %>
 
-  <%= f.number_field :ratings, in: 1..5, required: true, placeholder: "Rating out of 5" %>
-  <%= f.text_area :review, placeholder: "Write your review...", required: true %>
+    <%= f.label :ratings, "Rating (1-5)", class: "form-label fw-bold" %>
+    <%= f.number_field :ratings, in: 1..5, required: true, class: "form-control", placeholder: "Rating out of 5" %>
 
-  <%= f.submit "Submit Review", class: "btn btn-primary" %>
-<% end %>
+    <%= f.label :review, "Your Review", class: "form-label fw-bold mt-3" %>
+    <%= f.text_area :review, class: "form-control", rows: 4, placeholder: "Write your review...", required: true %>
+
+    <%= f.submit "Submit Review", class: "btn btn-primary mt-3" %>
+  <% end %>
+</div>
+
 
 <script>
   document.addEventListener("DOMContentLoaded", () => {

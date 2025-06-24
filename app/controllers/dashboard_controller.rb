@@ -4,8 +4,9 @@ class DashboardController < ApplicationController
 
     auto_complete_contracts
 
-    @active_projects = @current_user.projects.where("deadline >= ?", Date.today)
-    @completed_projects = @current_user.projects.where("deadline < ?", Date.today)
+    @active_projects = @current_user.projects.active
+    @completed_projects = @current_user.projects.completed
+
 
     @contracts = Contract.where(client_id: @current_user.id).includes(:project, :freelancer)
 
@@ -32,8 +33,8 @@ end
 
   def auto_complete_contracts
     Contract.joins(:project)
-            .where(status: :inprogress)
-            .where("end_date < ?", Date.today)
+            .where(status: :active)
+            .where("end_date <= ?", Date.today)
             .find_each do |contract|
       contract.update(status: :completed)
     end

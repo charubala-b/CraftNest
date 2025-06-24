@@ -23,47 +23,70 @@
   </div>
 
   <!-- 🔹 Projects Tab -->
-  <div id="projects" class="tab-content" style="display: block;">
-    <h2 class="section-title">My Projects</h2>
-    <%= link_to 'Post New Project', new_project_path, class: 'btn btn-primary' %>
-    <% if @active_projects!=nil %>
+<div id="projects" class="tab-content" style="display: block;">
+  <h2 class="section-title">My Projects</h2>
+  <%= link_to 'Post New Project', new_project_path, class: 'btn btn-primary' %>
+
+  <% if @active_projects.present? %>
     <% @active_projects.each do |project| %>
       <div class="project-card">
         <h3><%= project.title %></h3>
         <p><%= project.description %></p>
         <p><strong>Budget:</strong> ₹<%= project.budget %></p>
         <p><strong>Deadline:</strong> <%= project.deadline.strftime("%d %b %Y") %></p>
+        <p><strong>Required Skills:</strong>
+        <% if project.skills.any? %>
+          <%= project.skills.map { |s| s.skill_name.humanize }.join(', ') %>
+        <% else %>
+          <span class="text-muted">None</span>
+        <% end %>
+        </p>
 
+
+        <!-- Edit/Delete Project -->
         <%= link_to 'Edit', edit_project_path(project), class: "btn btn-warn" %>
         <%= button_to 'Delete', project_path(project), method: :delete, data: { confirm: 'Are you sure?' }, class: "btn btn-dan" %>
 
+        <!-- 🔹 Bids Section -->
         <h4>Bids</h4>
-        <% project.bids.each do |bid| %>
-        <div class="bid-card <%= 'accepted-card' if bid.accepted? %>">
-          <p><strong>Freelancer:</strong> <%= bid.user.name %></p>
-          <p><strong>₹:</strong> <%= bid.proposed_price %></p>
+        <% if project.bids.any? %>
+          <% accepted_bid = project.bids.find_by(accepted: true) %>
+          <% project.bids.each do |bid| %>
+            <div class="bid-card <%= 'accepted-card' if bid.accepted? %>">
+              <p><strong>Freelancer:</strong> <%= bid.user.name %></p>
+              <p><strong>cover_letter:</strong> <%= bid.cover_letter %></p>
+              <p><strong>₹:</strong> <%= bid.proposed_price %></p>
 
-          <% if bid.accepted? %>
-            <button class="btn btn-secondary" disabled>Accepted</button>
+              <% if bid.accepted? %>
+                <button class="btn btn-secondary" disabled>Accepted</button>
+              <% elsif accepted_bid.present? %>
+                <button class="btn btn-outline-secondary" disabled>Not Accepted</button>
+              <% else %>
+                <%= button_to "Accept Bid", accept_bid_path(bid), method: :post, class: "btn btn-success", data: { confirm: "Accept this bid?" } %>
+              <% end %>
+            </div>
           <% end %>
-        </div>
+        <% else %>
+          <p class="text-muted">No bids requested.</p>
         <% end %>
-        <!-- 🔹 Expand Button -->
-        <!-- Expand Comments Button -->
+
+
+        <!-- 🔹 Comments Toggle -->
         <button onclick="toggleComments('comments-<%= project.id %>', this)">▶</button> Show Comments
 
         <!-- Comments Section -->
         <div id="comments-<%= project.id %>" style="display: none; margin-top: 10px;">
+        <% if project.comments.any? %>
           <% project.comments.where(parent_id: nil).each do |comment| %>
             <div class="comment-block">
               <p><strong><%= comment.user.name %>:</strong> <%= comment.body %></p>
 
-              <!-- Reply form toggle button -->
+              <!-- Reply toggle -->
               <button onclick="toggleReplyForm(<%= comment.id %>)" class="btn btn-sm btn-light">Reply</button>
 
               <!-- Reply form -->
               <div id="reply-form-<%= comment.id %>" style="display: none; margin-top: 5px;">
-                <%= form_with model: [project, Comment.new], local: true do |f| %>
+                <%= form_with model: [project, Comment.new], local: true , data:{ turbo: false } do |f| %>
                   <%= f.hidden_field :parent_id, value: comment.id %>
                   <%= f.text_area :body, rows: 2, class: "form-control", placeholder: "Write your reply..." %>
                   <%= f.submit "Post Reply", class: "btn btn-sm btn-primary mt-1" %>
@@ -81,36 +104,59 @@
               <%= button_to 'Delete', comment_path(comment), method: :delete, data: { confirm: 'Are you sure?' }, class: "btn btn-sm btn-danger mt-1" %>
             </div>
           <% end %>
+        <% else %>
+          <p class="text-muted">No comments to reply.</p>
+        <% end %>
         </div>
-
-        
       </div>
     <% end %>
-    <% end %>
-  </div>
+  <% else %>
+    <p>No active projects.</p>
+  <% end %>
+</div>
 
-  <!-- 🔹 Contracts Tab -->
+<!-- Contracts Tab -->
   <div id="contracts" class="tab-content">
-    <h2 class="section-title">My Contracts</h2>
     <% @contracts.each do |contract| %>
       <div class="contract-card">
         <p><strong>Project:</strong> <%= contract.project.title %></p>
-        <p><strong>Freelancer:</strong> <%= contract.freelancer.name %></p>
+        <p><strong>Client:</strong> <%= contract.client.name %></p>
         <p><strong>Status:</strong> <%= contract.status.humanize %></p>
 
-       
-
         <% if contract.completed? %>
-          <h4>Freelancer's Review</h4>
-          <% review = contract.project.reviews.find_by(reviewer_id: @current_user.id) %>
-          <% if review.present? %>
+        <div class="review-section">
+          <!-- ✅ Client's review for Freelancer -->
+          <h5>Client's Review for Freelancer</h5>
+          <% client_review = contract.project.reviews.find_by(reviewer_id: contract.client_id) %>
+          <% if client_review.present? %>
             <div class="review-card">
-              <p>⭐ <%= review.ratings %> - <%= review.review %></p>
+              <p>⭐ <%= client_review.ratings %> - <%= client_review.review %></p>
+              <p><em>by <%= contract.client.name %></em></p>
             </div>
           <% else %>
-            <%= link_to "Write Review", new_review_path(reviewee_id: contract.freelancer_id, project_id: contract.project_id), class: "btn btn-warning" %>
+            <% if current_user.id == contract.client_id %>
+              <%= link_to "Write Review for Freelancer", new_review_path(reviewee_id: contract.freelancer_id, project_id: contract.project_id), class: "btn btn-warning" %>
+            <% end %>
           <% end %>
+
+          <!-- ✅ Freelancer's review for Client -->
+          <h5>Freelancer's Review for Client</h5>
+          <% freelancer_review = contract.project.reviews.find_by(reviewer_id: contract.freelancer_id) %>
+          <% if freelancer_review.present? %>
+            <div class="review-card">
+              <p>⭐ <%= freelancer_review.ratings %> - <%= freelancer_review.review %></p>
+              <p><em>by <%= contract.freelancer.name %></em></p>
+            </div>
+          <% else %>
+            <% if current_user.id == contract.freelancer_id %>
+              <%= link_to "Write Review for Client", new_review_path(reviewee_id: contract.client_id, project_id: contract.project_id), class: "btn btn-warning" %>
+            <% else %>
+              <h6><i>Freelancer's review is not provided yet</i></h6>
+            <% end %>
+          <% end %>
+        </div>
         <% end %>
+
       </div>
     <% end %>
   </div>

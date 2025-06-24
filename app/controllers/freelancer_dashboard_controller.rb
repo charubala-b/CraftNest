@@ -1,17 +1,24 @@
 class FreelancerDashboardController < ApplicationController
-  # before_action :require_login
-
   def home
-    # Projects already bid on or assigned via contract
     bid_project_ids = current_user.bids.pluck(:project_id)
     contract_project_ids = current_user.freelancer_contracts.pluck(:project_id)
 
-    # Available projects: not already bid on or contracted, and not expired
-    @available_projects = Project.where.not(id: bid_project_ids + contract_project_ids)
-                                 .where("deadline >= ?", Date.today)
+    accepted_project_ids = Bid.where(accepted: true).pluck(:project_id).uniq
 
-    # Contracts where user is freelancer
+    base_projects = Project.where.not(id: bid_project_ids + contract_project_ids + accepted_project_ids)
+                           .where("deadline > ?", Date.today)
+
+    @skills = Skill.all
+
+    if params[:skill_id].present?
+      @available_projects = base_projects.joins(:skills).where(skills: { id: params[:skill_id] }).distinct
+    else
+      @available_projects = base_projects
+    end
+
     @contracts = current_user.freelancer_contracts.includes(:project, :client)
+
+    @bid = Bid.new
   end
 
   def chat

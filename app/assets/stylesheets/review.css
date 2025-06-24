@@ -1,0 +1,37 @@
+#flash-messages {
+  max-width: 350px;
+  top: 20px;
+  right: 20px;
+}
+
+#flash-messages .alert {
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  font-weight: 500;
+  font-size: 14px;
+  border-radius: 6px;
+}
+
+.review-form-container {
+  background-color: #68929c;
+  padding: 20px;
+  border-radius: 10px;
+  max-width: 600px;
+  margin: 30px auto;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+}
+
+.review-form-container textarea,
+.review-form-container input[type="number"] {
+  width: 100%;
+  margin-bottom: 15px;
+  border-radius: 6px;
+  border: 1px solid #ccc;
+  padding: 10px;
+  font-size: 15px;
+}
+
+.review-form-container .btn {
+  width: 100%;
+  font-weight: bold;
+  padding: 10px;
+}

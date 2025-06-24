@@ -1,6 +1,5 @@
 <%= stylesheet_link_tag "project", media: "all", "data-turbo-track": "reload" %>
 
-
 <div id="flash-messages" class="position-fixed top-0 end-0 p-3" style="z-index: 1050;">
   <% flash.each do |key, message| %>
     <div class="alert alert-<%= key == "notice" ? "success" : "danger" %> alert-dismissible fade show" role="alert">
@@ -33,6 +32,19 @@
       <%= f.label :deadline, class: "form-label" %>
       <%= f.date_field :deadline, class: "form-control" %>
     </div>
+
+    <div class="mb-3">
+    <label class="form-label">Required Skills</label>
+    <div class="form-check">
+      <% @skills.each do |skill| %>
+        <div>
+          <%= check_box_tag "project[skill_ids][]", skill.id, @project.skill_ids.include?(skill.id), id: "skill_#{skill.id}", class: "form-check-input" %>
+          <%= label_tag "skill_#{skill.id}", skill.skill_name.humanize, class: "form-check-label" %>
+        </div>
+      <% end %>
+    </div>
+    </div>
+
 
     <%= f.submit "Update Project", class: "btn btn-success mt-3" %>
   <% end %>

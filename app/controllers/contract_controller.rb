@@ -9,7 +9,7 @@ class ContractController < ApplicationController
   end
 
   def create
-    @contract = Contract.new(contract_params.merge(client_id: current_user.id, status: :inprogress))
+    @contract = Contract.new(contract_params.merge(client_id: current_user.id, status: :active))
     if @contract.save
       redirect_to dashboard_path, notice: 'Contract created!'
     else
