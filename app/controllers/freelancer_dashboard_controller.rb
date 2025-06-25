@@ -13,7 +13,6 @@ class FreelancerDashboardController < ApplicationController
                            .where("deadline > ?", Date.today)
 
     @skills = Skill.all
-
     @available_projects = if params[:skill_id].present?
       base_projects.joins(:skills).where(skills: { id: params[:skill_id] }).distinct
     else
@@ -22,6 +21,37 @@ class FreelancerDashboardController < ApplicationController
 
     @contracts = current_user.contracts_as_freelancer.includes(:project, :client)
     @bid       = Bid.new
+  end
+
+  def add_skill
+    skill_id = params[:skill_id]
+
+    if current_user.skills.exists?(id: skill_id)
+      flash[:alert] = "Skill already exists in your profile."
+    else
+      current_user.skill_assignments.create(skill_id: skill_id)
+      flash[:notice] = "Skill added successfully!"
+    end
+
+    redirect_to freelancer_dashboard_path(anchor: 'profile')
+  end
+
+  def create_custom_skill
+    skill_name = params[:new_skill_name].strip
+
+    if skill_name.blank?
+      flash[:alert] = "Skill name cannot be blank."
+    else
+      skill = Skill.find_or_create_by(skill_name: skill_name.titleize)
+      if current_user.skills.exists?(id: skill.id)
+        flash[:alert] = "Skill already exists in your profile."
+      else
+        current_user.skill_assignments.create(skill: skill)
+        flash[:notice] = "Custom skill '#{skill.skill_name}' added to your profile."
+      end
+    end
+
+    redirect_to freelancer_dashboard_path(anchor: 'profile')
   end
 
   def chat

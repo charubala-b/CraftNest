@@ -28,6 +28,13 @@ root to: redirect { |params, req|
   # Chat Routes
   get 'chat/:freelancer_id/:project_id', to: 'dashboard#chat', as: 'chat_room'
   get 'freelancer/chat/:client_id/:project_id', to: 'freelancer_dashboard#chat', as: 'freelancer_chat_room'
+  resources :freelancer_dashboard, only: [:home] do
+    collection do
+      post :add_skill
+      post :create_custom_skill
+    end
+  end
+
 
   # Projects and Nested Resources
   resources :projects do
@@ -49,4 +56,7 @@ root to: redirect { |params, req|
 
   # Contracts
   resources :contracts, only: [:update]
+  # config/routes.rb
+resources :skill_assignments, only: [:create, :destroy]
+
 end
