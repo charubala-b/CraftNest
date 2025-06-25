@@ -1,5 +1,5 @@
 class CommentsController < ApplicationController
-  # before_action :authenticate_user!  # if using Devise or similar
+  before_action :authenticate_user!
   before_action :set_project, only: [:create]
   before_action :set_comment, only: [:destroy]
 

@@ -1,4 +1,6 @@
 <%= stylesheet_link_tag "chat", media: "all", "data-turbo-track": "reload" %>
+
+<!-- Flash messages -->
 <div id="flash-messages" class="position-fixed top-0 end-0 p-3" style="z-index: 1050;">
   <% flash.each do |key, message| %>
     <div class="alert alert-<%= key == "notice" ? "success" : "danger" %> alert-dismissible fade show" role="alert">
@@ -8,7 +10,7 @@
   <% end %>
 </div>
 
-
+<!-- Chat Container -->
 <div class="chat-container">
   <div class="chat-header">
     Chat with <%= @freelancer.name %> on <%= @project.title %>
@@ -19,7 +21,7 @@
       <p class="no-messages">No messages yet.</p>
     <% else %>
       <% @messages.each do |msg| %>
-        <div class="message <%= msg.sender_id == @current_user.id ? 'sent' : 'received' %>">
+        <div class="message <%= msg.sender_id == current_user.id ? 'sent' : 'received' %>">
           <%= msg.body %>
         </div>
       <% end %>
@@ -27,8 +29,8 @@
   </div>
 
   <div class="chat-input">
-    <%= form_with model: @new_message, url: messages_path, local: true , data: { turbo: false } do |f| %>
-      <%= f.hidden_field :sender_id, value: @current_user.id %>
+    <%= form_with model: @new_message, url: messages_path, local: true, data: { turbo: false } do |f| %>
+      <!-- sender_id is set in the controller securely -->
       <%= f.hidden_field :receiver_id, value: @freelancer.id %>
       <%= f.hidden_field :project_id, value: @project.id %>
       <%= f.text_area :body, rows: 1, placeholder: "Type a message..." %>
@@ -38,14 +40,31 @@
 </div>
 
 <script>
-  document.addEventListener("DOMContentLoaded", () => {
-    const alert = document.querySelector('.alert');
-    if (alert) {
+  function scrollChatToBottom() {
+    const chatBox = document.querySelector(".chat-messages");
+    if (chatBox) {
+      chatBox.scrollTop = chatBox.scrollHeight;
+    }
+  }
+
+  function dismissFlashMessages() {
+    document.querySelectorAll('.alert').forEach(alert => {
       setTimeout(() => {
         alert.classList.remove("show");
         alert.classList.add("fade");
         alert.remove();
       }, 3000);
-    }
+    });
+  }
+
+  document.addEventListener("DOMContentLoaded", () => {
+    dismissFlashMessages();
+    scrollChatToBottom();
+  });
+
+  document.addEventListener("turbo:load", () => {
+    dismissFlashMessages();
+    scrollChatToBottom();
   });
 </script>
+

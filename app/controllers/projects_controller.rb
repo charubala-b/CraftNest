@@ -2,6 +2,8 @@ class ProjectsController < ApplicationController
   before_action :set_project, only: [:show, :edit, :update, :destroy]
   before_action :require_client
   before_action :set_skills, only: [:new, :edit, :create, :update]
+  before_action :authenticate_user!
+
 
   def index
     @projects = current_user.projects

@@ -1,0 +1,110 @@
+<%= stylesheet_link_tag "users", media: "all", "data-turbo-track": "reload" %>
+
+<div id="flash-messages" class="position-fixed top-0 end-0 p-3" style="z-index: 1050;">
+  <% flash.each do |key, message| %>
+    <div class="alert alert-<%= key == "notice" ? "success" : "danger" %> alert-dismissible fade show" role="alert">
+      <%= message %>
+      <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+  <% end %>
+</div>
+
+<div class="form-container">
+  <%= form_for(resource, as: resource_name, url: registration_path(resource_name), html: { class: "needs-validation" }) do |f| %>
+    <h2>Register</h2>
+
+    <%= render "devise/shared/error_messages", resource: resource %>
+
+    <div class="form-group">
+      <%= f.label :name, "Full Name" %>
+      <%= f.text_field :name, placeholder: "Enter your full name", class: "form-control", required: true %>
+    </div>
+
+    <div class="form-group">
+      <%= f.label :email %>
+      <%= f.email_field :email, placeholder: "Enter your email", class: "form-control", required: true %>
+    </div>
+
+    <div class="form-group">
+      <%= f.label :password %>
+      <%= f.password_field :password, placeholder: "Enter your password", class: "form-control", autocomplete: "new-password", required: true %>
+    </div>
+
+    <div class="form-group">
+      <%= f.label :password_confirmation %>
+      <%= f.password_field :password_confirmation, placeholder: "Confirm your password", class: "form-control", autocomplete: "new-password", required: true %>
+    </div>
+
+    <div class="form-group">
+      <%= f.label :role %>
+      <%= f.select :role, User.roles.keys.map { |r| [r.titleize, r] }, {}, { class: "form-select", id: "user_role_select", required: true } %>
+    </div>
+
+    <!-- ✅ Freelancer Skill Section (conditional) -->
+    <div id="skill-section" style="display: none;">
+      <div class="form-group">
+        <label>Select Skills</label>
+        <% default_skills = ['AI', 'ML', 'REACT', 'RoR', 'Node.js'] %>
+
+        <p class="fw-bold text-primary">Common Skills</p>
+        <% default_skills.each do |name| %>
+          <% skill = Skill.find_by("LOWER(skill_name) = ?", name.downcase) %>
+          <% if skill %>
+            <div>
+              <%= check_box_tag "user[skill_ids][]", skill.id, false, id: "skill_#{skill.id}", class: "form-check-input" %>
+              <%= label_tag "skill_#{skill.id}", skill.skill_name.humanize, class: "form-check-label" %>
+            </div>
+          <% end %>
+        <% end %>
+
+        <hr class="my-2">
+        <p class="fw-bold text-primary">Other Skills</p>
+        <% (Skill.all - Skill.where("UPPER(skill_name) IN (?)", default_skills.map(&:upcase))).each do |skill| %>
+          <div>
+            <%= check_box_tag "user[skill_ids][]", skill.id, false, id: "skill_#{skill.id}", class: "form-check-input" %>
+            <%= label_tag "skill_#{skill.id}", skill.skill_name.humanize, class: "form-check-label" %>
+          </div>
+        <% end %>
+      </div>
+
+      <div class="form-group mt-3">
+        <%= label_tag :new_skills, "Add New Skills (comma separated)" %>
+        <%= text_field_tag "user[new_skills]", nil, class: "form-control", placeholder: "e.g. Vue.js, Django" %>
+        <small class="text-muted">These will be created and added to your profile if not already listed.</small>
+      </div>
+    </div>
+
+    <%= f.submit "Sign up", class: "form-submit mt-3 btn btn-primary" %>
+
+    <div class="form-link">
+      <%= link_to "Already have an account? Login", new_session_path(resource_name) %>
+    </div>
+  <% end %>
+</div>
+
+# <%= render "devise/shared/links" %>
+
+<script>
+  document.addEventListener("DOMContentLoaded", () => {
+    const roleSelect = document.getElementById("user_role_select");
+    const skillSection = document.getElementById("skill-section");
+    const alert = document.querySelector('.alert');
+
+    const toggleSkillSection = () => {
+      skillSection.style.display = roleSelect.value === "freelancer" ? "block" : "none";
+    };
+
+    if (roleSelect) {
+      roleSelect.addEventListener("change", toggleSkillSection);
+      toggleSkillSection();
+    }
+
+    if (alert) {
+      setTimeout(() => {
+        alert.classList.remove("show");
+        alert.classList.add("fade");
+        alert.remove();
+      }, 3000);
+    }
+  });
+</script>

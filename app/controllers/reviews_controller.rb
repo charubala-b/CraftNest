@@ -1,4 +1,6 @@
 class ReviewsController < ApplicationController
+  before_action :authenticate_user!
+
   def new
     @review = Review.new
     @project = Project.find(params[:project_id])
@@ -6,7 +8,7 @@ class ReviewsController < ApplicationController
   end
 
   def create
-    reviewer_id = session[:user_id]
+    reviewer_id = current_user.id
     project_id = params[:review][:project_id]
 
     existing_review = Review.find_by(reviewer_id: reviewer_id, project_id: project_id)

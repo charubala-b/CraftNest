@@ -3,7 +3,7 @@ class Message < ApplicationRecord
   belongs_to :receiver, class_name: "User"
   belongs_to :project
 
-  validates :body, presence: true, length: { minimum: 20 , maximum: 100}
+  validates :body, presence: true, length: { minimum: 2 , maximum: 100}
 
   after_create :notify_receiver
 

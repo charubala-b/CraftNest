@@ -7,25 +7,42 @@
   <% end %>
 </div>
 
+<h1 class="my-4">My Sent Bids</h1>
 
-<h1>My Sent Bids</h1>
-<% @sent_bids.each do |bid| %>
-  <div class="bid-card">
-    <h3><%= bid.project.title %></h3>
-    <p>₹ <%= bid.proposed_price %></p>
-    <p>Status: <%= bid.accepted? ? 'Accepted' : 'Pending' %></p>
-  </div>
+<% if @sent_bids.any? %>
+  <% @sent_bids.each do |bid| %>
+    <div class="bid-card mb-3 p-3 border rounded shadow-sm">
+      <h3><%= bid.project.title %></h3>
+      <p><strong>Proposed Price:</strong> ₹<%= bid.proposed_price %></p>
+      <p><strong>Cover Letter:</strong> <%= bid.cover_letter.presence || "N/A" %></p>
+      <p><strong>Deadline:</strong> <%= bid.project.deadline.strftime("%d %b %Y") %></p>
+
+      <% accepted_bid = bid.project.bids.find_by(accepted: true) %>
+      <p>
+        <strong>Status:</strong>
+        <% if bid.accepted? %>
+          <span class="text-success">Accepted</span>
+        <% elsif accepted_bid.present? %>
+          <span class="text-danger">Rejected</span>
+        <% else %>
+          <span class="text-warning">Pending</span>
+        <% end %>
+      </p>
+    </div>
+  <% end %>
+<% else %>
+  <p class="text-muted">You haven't submitted any bids yet.</p>
 <% end %>
 
 <script>
   document.addEventListener("DOMContentLoaded", () => {
-    const alert = document.querySelector('.alert');
-    if (alert) {
+    const alerts = document.querySelectorAll('.alert');
+    alerts.forEach((alert) => {
       setTimeout(() => {
         alert.classList.remove("show");
         alert.classList.add("fade");
         alert.remove();
       }, 3000);
-    }
+    });
   });
 </script>

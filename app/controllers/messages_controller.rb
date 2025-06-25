@@ -1,6 +1,9 @@
 class MessagesController < ApplicationController
+  before_action :authenticate_user!
+
   def create
     @message = Message.new(message_params)
+    @message.sender_id = current_user.id  # Secure assignment
 
     if @message.save
       if current_user.client?
@@ -18,6 +21,6 @@ class MessagesController < ApplicationController
   private
 
   def message_params
-    params.require(:message).permit(:sender_id, :receiver_id, :project_id, :body)
+    params.require(:message).permit(:receiver_id, :project_id, :body)
   end
 end
