@@ -13,20 +13,25 @@ class ProjectsController < ApplicationController
     @project = Project.new
   end
 
-  def create
-    @project = current_user.projects.build(project_params)
+def create
+  @project = current_user.projects.build(project_params.except(:skill_ids, :new_skills))
 
-    if @project.budget.present? && @project.budget.to_i < 0
-      flash.now[:alert] = "Budget cannot be negative."
-      render :new and return
-    end
-
-    if @project.save
-      redirect_to dashboard_path, notice: "Successfully created a project"
-    else
-      render :new
-    end
+  if @project.budget.present? && @project.budget.to_f < 0
+    flash.now[:alert] = "Budget cannot be negative."
+    render :new and return
   end
+
+  if @project.save
+    # ✅ Fix here
+    new_skill_ids = process_new_skills(params[:new_skills])
+    all_skill_ids = Array(params[:project][:skill_ids]).map(&:to_i) + new_skill_ids
+    assign_skills(@project, all_skill_ids.uniq)
+    redirect_to dashboard_path, notice: "Successfully created a project"
+  else
+    render :new
+  end
+end
+
 
   def edit; end
 
@@ -36,9 +41,13 @@ class ProjectsController < ApplicationController
       render :edit and return
     end
 
-    if @project.update(project_params)
-      redirect_to dashboard_path, notice: "Project updated successfully"
+    if @project.update(project_params.except(:skill_ids, :new_skills))
+      new_skill_ids = process_new_skills(params[:new_skills])
+      all_skill_ids = Array(params[:project][:skill_ids]).map(&:to_i) + new_skill_ids
+      assign_skills(@project, all_skill_ids.uniq)
+      redirect_to dashboard_path, notice: 'Project updated successfully.'
     else
+      flash.now[:alert] = "Failed to update project."
       render :edit
     end
   end
@@ -64,10 +73,25 @@ class ProjectsController < ApplicationController
   end
 
   def project_params
-    params.require(:project).permit(:title, :description, :budget, :deadline, skill_ids: [])
+    params.require(:project).permit(
+      :title, :description, :budget, :deadline, :new_skills, skill_ids: []
+    )
   end
 
   def require_client
     redirect_to root_path unless current_user&.client?
+  end
+
+  def assign_skills(project, skill_ids)
+    project.skill_assignments.destroy_all
+    skill_ids.each do |skill_id|
+      project.skill_assignments.create(skill_id: skill_id)
+    end
+  end
+
+  def process_new_skills(raw_new_skills)
+    raw_new_skills.to_s.split(',').map(&:strip).reject(&:blank?).map do |skill_name|
+      Skill.find_or_create_by(skill_name: skill_name.downcase).id
+    end
   end
 end

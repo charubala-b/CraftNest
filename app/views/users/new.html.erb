@@ -1,6 +1,5 @@
 <%= stylesheet_link_tag "users", media: "all", "data-turbo-track": "reload" %>
 
-
 <div id="flash-messages" class="position-fixed top-0 end-0 p-3" style="z-index: 1050;">
   <% flash.each do |key, message| %>
     <div class="alert alert-<%= key == "notice" ? "success" : "danger" %> alert-dismissible fade show" role="alert">
@@ -11,7 +10,7 @@
 </div>
 
 <div class="form-container">
-  <%= form_with model: @user, url: register_path, class: "", local: true, data: { turbo: false } do |f| %>
+  <%= form_with model: @user, url: register_path, local: true, data: { turbo: false } do |f| %>
     <h2>Register</h2>
 
     <div class="form-group">
@@ -36,15 +35,44 @@
 
     <div class="form-group">
       <%= f.label :role %>
-      <%= f.select :role, User.roles.keys.map { |r| [r.titleize, r] }, {}, { required: true , selected: 'freelancer'} %>
+      <%= f.select :role, User.roles.keys.map { |r| [r.titleize, r] }, {}, { required: true, id: "user_role_select" } %>
     </div>
 
-    <div class="form-group">
-      <%= f.label :skills %>
-      <%= f.select :skills, User.skills.keys.map { |s| [s.upcase, s] }, {}, { required: true , selected: 'react'} %>
+    <!-- ✅ Freelancer Skill Section (conditional) -->
+    <div id="skill-section" style="display: none;">
+      <div class="form-group">
+        <label>Select Skills</label>
+        <% default_skills = ['AI', 'ML', 'REACT', 'RoR', 'Node.js'] %>
+
+        <p class="fw-bold text-primary">Common Skills</p>
+        <% default_skills.each do |name| %>
+          <% skill = @skills.find { |s| s.skill_name.casecmp(name).zero? } %>
+          <% if skill %>
+            <div>
+              <%= check_box_tag "user[skill_ids][]", skill.id, false, id: "skill_#{skill.id}", class: "form-check-input" %>
+              <%= label_tag "skill_#{skill.id}", skill.skill_name.humanize, class: "form-check-label" %>
+            </div>
+          <% end %>
+        <% end %>
+
+        <hr class="my-2">
+        <p class="fw-bold text-primary">Other Skills</p>
+        <% (@skills - @skills.select { |s| default_skills.include?(s.skill_name.upcase) }).each do |skill| %>
+          <div>
+            <%= check_box_tag "user[skill_ids][]", skill.id, false, id: "skill_#{skill.id}", class: "form-check-input" %>
+            <%= label_tag "skill_#{skill.id}", skill.skill_name.humanize, class: "form-check-label" %>
+          </div>
+        <% end %>
+      </div>
+
+      <div class="form-group mt-3">
+        <%= label_tag :new_skills, "Add New Skills (comma separated)" %>
+        <%= text_field_tag "user[new_skills]", nil, class: "form-control", placeholder: "e.g. Vue.js, Django" %>
+        <small class="text-muted">These will be created and added to your profile if not already listed.</small>
+      </div>
     </div>
 
-    <%= f.submit "Register", class: "form-submit" %>
+    <%= f.submit "Register", class: "form-submit mt-3" %>
 
     <div class="form-link">
       <%= link_to "Already have an account? Login", login_path %>
@@ -52,10 +80,19 @@
   <% end %>
 </div>
 
-
 <script>
   document.addEventListener("DOMContentLoaded", () => {
+    const roleSelect = document.getElementById("user_role_select");
+    const skillSection = document.getElementById("skill-section");
     const alert = document.querySelector('.alert');
+
+    const toggleSkillSection = () => {
+      skillSection.style.display = roleSelect.value === "freelancer" ? "block" : "none";
+    };
+
+    roleSelect.addEventListener("change", toggleSkillSection);
+    toggleSkillSection(); // Initial check
+
     if (alert) {
       setTimeout(() => {
         alert.classList.remove("show");

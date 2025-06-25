@@ -1,4 +1,5 @@
 Rails.application.routes.draw do
+  # devise_for :users
   # Root path
   root "users#login"
 
@@ -51,4 +52,5 @@ Rails.application.routes.draw do
 
   # Contracts
   resources :contracts, only: [:update]
+  
 end

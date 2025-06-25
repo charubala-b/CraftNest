@@ -9,7 +9,6 @@
   <% end %>
 </div>
 
-
 <div class="dashboard-container">
   <h1 class="dashboard-title">Client Dashboard</h1>
 
@@ -19,164 +18,161 @@
     <button class="tab-button" onclick="openTab(event, 'contracts')">Contracts</button>
     <button class="tab-button" onclick="openTab(event, 'messages')">Messages</button>
     <button class="tab-button" onclick="openTab(event, 'completed_projects')">Completed Projects</button>
-
   </div>
 
   <!-- 🔹 Projects Tab -->
-<div id="projects" class="tab-content" style="display: block;">
-  <h2 class="section-title">My Projects</h2>
-  <%= link_to 'Post New Project', new_project_path, class: 'btn btn-primary' %>
+  <div id="projects" class="tab-content" style="display: block;">
+    <h2 class="section-title">My Projects</h2>
+    <%= link_to 'Post New Project', new_project_path, class: 'btn btn-primary' %>
 
-  <% if @active_projects.present? %>
-    <% @active_projects.each do |project| %>
-      <div class="project-card">
-        <h3><%= project.title %></h3>
-        <p><%= project.description %></p>
-        <p><strong>Budget:</strong> ₹<%= project.budget %></p>
-        <p><strong>Deadline:</strong> <%= project.deadline.strftime("%d %b %Y") %></p>
-        <p><strong>Required Skills:</strong>
-        <% if project.skills.any? %>
-          <%= project.skills.map { |s| s.skill_name.humanize }.join(', ') %>
-        <% else %>
-          <span class="text-muted">None</span>
-        <% end %>
-        </p>
+    <% if @active_projects.present? %>
+      <% @active_projects.ordered_by_deadline.each do |project| %>
+        <div class="project-card">
+          <h3><%= project.title %></h3>
+          <p><%= project.description %></p>
+          <p><strong>Budget:</strong> ₹<%= project.budget %></p>
+          <p><strong>Deadline:</strong> <%= project.deadline.strftime("%d %b %Y") %></p>
+          <p><strong>Required Skills:</strong>
+            <% if project.skills.any? %>
+              <%= project.skills.map { |s| s.skill_name.humanize }.join(', ') %>
+            <% else %>
+              <span class="text-muted">None</span>
+            <% end %>
+          </p>
 
+          <!-- Edit/Delete Project -->
+          <%= link_to 'Edit', edit_project_path(project), class: "btn btn-warn" %>
+          <%= button_to 'Delete', project_path(project), method: :delete, data: { confirm: 'Are you sure?' }, class: "btn btn-dan" %>
 
-        <!-- Edit/Delete Project -->
-        <%= link_to 'Edit', edit_project_path(project), class: "btn btn-warn" %>
-        <%= button_to 'Delete', project_path(project), method: :delete, data: { confirm: 'Are you sure?' }, class: "btn btn-dan" %>
+          <!-- 🔹 Bids Section -->
+          <h4>Bids</h4>
+          <% if project.bids.any? %>
+            <% accepted_bid = project.bids.find_by(accepted: true) %>
+            <% project.bids.ordered_by_price_desc.each do |bid| %>
+              <div class="bid-card <%= 'accepted-card' if bid.accepted? %>">
+                <p><strong>Freelancer:</strong> <%= bid.user.name %></p>
 
-        <!-- 🔹 Bids Section -->
-        <h4>Bids</h4>
-        <% if project.bids.any? %>
-          <% accepted_bid = project.bids.find_by(accepted: true) %>
-          <% project.bids.each do |bid| %>
-            <div class="bid-card <%= 'accepted-card' if bid.accepted? %>">
-              <p><strong>Freelancer:</strong> <%= bid.user.name %></p>
-              <p><strong>cover_letter:</strong> <%= bid.cover_letter %></p>
-              <p><strong>₹:</strong> <%= bid.proposed_price %></p>
+                <% if bid.user.skills.any? %>
+                  <p><strong>Skills:</strong> <%= bid.user.skills.map(&:skill_name).join(", ") %></p>
+                <% else %>
+                  <p><strong>Skills:</strong> <span class="text-muted">No skills listed</span></p>
+                <% end %>
 
-              <% if bid.accepted? %>
-                <button class="btn btn-secondary" disabled>Accepted</button>
-              <% elsif accepted_bid.present? %>
-                <button class="btn btn-outline-secondary" disabled>Not Accepted</button>
-              <% else %>
-                <%= button_to "Accept Bid", accept_bid_path(bid), method: :post, class: "btn btn-success", data: { confirm: "Accept this bid?" } %>
-              <% end %>
-            </div>
-          <% end %>
-        <% else %>
-          <p class="text-muted">No bids requested.</p>
-        <% end %>
+                <p><strong>cover_letter:</strong> <%= bid.cover_letter %></p>
+                <p><strong>₹:</strong> <%= bid.proposed_price %></p>
 
-
-        <!-- 🔹 Comments Toggle -->
-        <button onclick="toggleComments('comments-<%= project.id %>', this)">▶</button> Show Comments
-
-        <!-- Comments Section -->
-        <div id="comments-<%= project.id %>" style="display: none; margin-top: 10px;">
-        <% if project.comments.any? %>
-          <% project.comments.where(parent_id: nil).each do |comment| %>
-            <div class="comment-block">
-              <p><strong><%= comment.user.name %>:</strong> <%= comment.body %></p>
-
-              <!-- Reply toggle -->
-              <button onclick="toggleReplyForm(<%= comment.id %>)" class="btn btn-sm btn-light">Reply</button>
-
-              <!-- Reply form -->
-              <div id="reply-form-<%= comment.id %>" style="display: none; margin-top: 5px;">
-                <%= form_with model: [project, Comment.new], local: true , data:{ turbo: false } do |f| %>
-                  <%= f.hidden_field :parent_id, value: comment.id %>
-                  <%= f.text_area :body, rows: 2, class: "form-control", placeholder: "Write your reply..." %>
-                  <%= f.submit "Post Reply", class: "btn btn-sm btn-primary mt-1" %>
+                <% if bid.accepted? %>
+                  <button class="btn btn-secondary" disabled>Accepted</button>
+                <% elsif accepted_bid.present? %>
+                  <button class="btn btn-outline-secondary" disabled>Not Accepted</button>
+                <% else %>
+                  <%= button_to "Accept Bid", accept_bid_path(bid), method: :post, class: "btn btn-success", data: { confirm: "Accept this bid?" } %>
                 <% end %>
               </div>
+            <% end %>
+          <% else %>
+            <p class="text-muted">No bids requested.</p>
+          <% end %>
 
-              <!-- Show replies -->
-              <% comment.replies.each do |reply| %>
-                <div class="reply" style="margin-left: 20px; margin-top: 5px;">
-                  <p><strong><%= reply.user.name %> (reply):</strong> <em>@<%= comment.user.name %></em> - <%= reply.body %></p>
-                  <%= button_to 'Delete', comment_path(reply), method: :delete, data: { confirm: 'Are you sure?' }, class: "btn btn-sm btn-danger" %>
+          <!-- 🔹 Comments Toggle -->
+          <button onclick="toggleComments('comments-<%= project.id %>', this)">▶</button> Show Comments
+
+          <!-- Comments Section -->
+          <div id="comments-<%= project.id %>" style="display: none; margin-top: 10px;">
+            <% if project.comments.any? %>
+              <% project.comments.where(parent_id: nil).each do |comment| %>
+                <div class="comment-block">
+                  <p><strong><%= comment.user.name %>:</strong> <%= comment.body %></p>
+                  <button onclick="toggleReplyForm(<%= comment.id %>)" class="btn btn-sm btn-light">Reply</button>
+                  <div id="reply-form-<%= comment.id %>" style="display: none; margin-top: 5px;">
+                    <%= form_with model: [project, Comment.new], local: true , data:{ turbo: false } do |f| %>
+                      <%= f.hidden_field :parent_id, value: comment.id %>
+                      <%= f.text_area :body, rows: 2, class: "form-control", placeholder: "Write your reply..." %>
+                      <%= f.submit "Post Reply", class: "btn btn-sm btn-primary mt-1" %>
+                    <% end %>
+                  </div>
+
+                  <% comment.replies.each do |reply| %>
+                    <div class="reply" style="margin-left: 20px; margin-top: 5px;">
+                      <p><strong><%= reply.user.name %> (reply):</strong> <em>@<%= comment.user.name %></em> - <%= reply.body %></p>
+                      <%= button_to 'Delete', comment_path(reply), method: :delete, data: { confirm: 'Are you sure?' }, class: "btn btn-sm btn-danger" %>
+                    </div>
+                  <% end %>
+
+                  <%= button_to 'Delete', comment_path(comment), method: :delete, data: { confirm: 'Are you sure?' }, class: "btn btn-sm btn-danger mt-1" %>
                 </div>
               <% end %>
-
-              <%= button_to 'Delete', comment_path(comment), method: :delete, data: { confirm: 'Are you sure?' }, class: "btn btn-sm btn-danger mt-1" %>
-            </div>
-          <% end %>
-        <% else %>
-          <p class="text-muted">No comments to reply.</p>
-        <% end %>
+            <% else %>
+              <p class="text-muted">No comments to reply.</p>
+            <% end %>
+          </div>
         </div>
-      </div>
+      <% end %>
+    <% else %>
+      <p>No active projects.</p>
     <% end %>
-  <% else %>
-    <p>No active projects.</p>
-  <% end %>
-</div>
+  </div>
 
-<!-- Contracts Tab -->
+  <!-- 🔹 Contracts Tab -->
   <div id="contracts" class="tab-content">
     <% @contracts.each do |contract| %>
       <div class="contract-card">
         <p><strong>Project:</strong> <%= contract.project.title %></p>
-        <p><strong>Client:</strong> <%= contract.client.name %></p>
+        <p><strong>Freelancer:</strong> <%= contract.freelancer.name %></p>
         <p><strong>Status:</strong> <%= contract.status.humanize %></p>
-
         <% if contract.completed? %>
-        <div class="review-section">
-          <!-- ✅ Client's review for Freelancer -->
-          <h5>Client's Review for Freelancer</h5>
-          <% client_review = contract.project.reviews.find_by(reviewer_id: contract.client_id) %>
-          <% if client_review.present? %>
-            <div class="review-card">
-              <p>⭐ <%= client_review.ratings %> - <%= client_review.review %></p>
-              <p><em>by <%= contract.client.name %></em></p>
-            </div>
-          <% else %>
-            <% if current_user.id == contract.client_id %>
-              <%= link_to "Write Review for Freelancer", new_review_path(reviewee_id: contract.freelancer_id, project_id: contract.project_id), class: "btn btn-warning" %>
-            <% end %>
-          <% end %>
-
-          <!-- ✅ Freelancer's review for Client -->
-          <h5>Freelancer's Review for Client</h5>
-          <% freelancer_review = contract.project.reviews.find_by(reviewer_id: contract.freelancer_id) %>
-          <% if freelancer_review.present? %>
-            <div class="review-card">
-              <p>⭐ <%= freelancer_review.ratings %> - <%= freelancer_review.review %></p>
-              <p><em>by <%= contract.freelancer.name %></em></p>
-            </div>
-          <% else %>
-            <% if current_user.id == contract.freelancer_id %>
-              <%= link_to "Write Review for Client", new_review_path(reviewee_id: contract.client_id, project_id: contract.project_id), class: "btn btn-warning" %>
+          <div class="review-section">
+            <h5>Client's Review for Freelancer</h5>
+            <% client_review = contract.project.reviews.find_by(reviewer_id: contract.client_id) %>
+            <% if client_review.present? %>
+              <div class="review-card">
+                <p>⭐ <%= client_review.ratings %> - <%= client_review.review %></p>
+                <p><em>by <%= contract.client.name %></em></p>
+              </div>
             <% else %>
-              <h6><i>Freelancer's review is not provided yet</i></h6>
+              <% if current_user.id == contract.client_id %>
+                <%= link_to "Write Review for Freelancer", new_review_path(reviewee_id: contract.freelancer_id, project_id: contract.project_id), class: "btn btn-warning" %>
+              <% end %>
             <% end %>
-          <% end %>
-        </div>
-        <% end %>
 
+            <h5>Freelancer's Review for Client</h5>
+            <% freelancer_review = contract.project.reviews.find_by(reviewer_id: contract.freelancer_id) %>
+            <% if freelancer_review.present? %>
+              <div class="review-card">
+                <p>⭐ <%= freelancer_review.ratings %> - <%= freelancer_review.review %></p>
+                <p><em>by <%= contract.freelancer.name %></em></p>
+              </div>
+            <% else %>
+              <% if current_user.id == contract.freelancer_id %>
+                <%= link_to "Write Review for Client", new_review_path(reviewee_id: contract.client_id, project_id: contract.project_id), class: "btn btn-warning" %>
+              <% else %>
+                <h6><i>Freelancer's review is not provided yet</i></h6>
+              <% end %>
+            <% end %>
+          </div>
+        <% else %>
+          <%= form_with url: contract_path(contract), method: :patch, local: true , data: { turbo: false } do |f| %>
+            <%= hidden_field_tag "contract[status]", "completed" %>
+            <%= f.submit "Mark Complete", class: "btn btn-warning", data: { confirm: "Are you sure?" } %>
+          <% end %>
+        <% end %>
       </div>
     <% end %>
   </div>
 
   <!-- 🔹 Messages Tab -->
   <div id="messages" class="tab-content">
-
-<div class="chat-list">
-  <% @contracts.each do |contract| %>
-    <% if contract.client_id == @current_user.id %>
-      <div class="chat-link-card">
-        <%= link_to chat_room_path(contract.freelancer_id, contract.project_id), class: "chat-link-button" do %>
-          💬 <strong><%= contract.freelancer.name %></strong> on <em><%= contract.project.title %></em>
+    <div class="chat-list">
+      <% @contracts.each do |contract| %>
+        <% if contract.client_id == @current_user.id %>
+          <div class="chat-link-card">
+            <%= link_to chat_room_path(contract.freelancer_id, contract.project_id), class: "chat-link-button" do %>
+              💬 <strong><%= contract.freelancer.name %></strong> on <em><%= contract.project.title %></em>
+            <% end %>
+          </div>
         <% end %>
-      </div>
-    <% end %>
-  <% end %>
-</div>
-
-
+      <% end %>
+    </div>
   </div>
 
   <!-- 🔹 Completed Projects Tab -->
@@ -189,26 +185,23 @@
         <p><%= project.description %></p>
         <p><strong>Budget:</strong> ₹<%= project.budget %></p>
         <p><strong>Deadline:</strong> <%= project.deadline.strftime("%d %b %Y") %></p>
-
-        
       </div>
     <% end %>
   </div>
-
 </div>
 
+<!-- 🔹 JS Scripts -->
 <script>
-function openTab(evt, tabId) {
-  document.querySelectorAll(".tab-content").forEach(el => el.style.display = "none");
-  document.querySelectorAll(".tab-button").forEach(el => el.classList.remove("active"));
-  document.getElementById(tabId).style.display = "block";
-  evt.currentTarget.classList.add("active");
-}
+  function openTab(evt, tabId) {
+    document.querySelectorAll(".tab-content").forEach(el => el.style.display = "none");
+    document.querySelectorAll(".tab-button").forEach(el => el.classList.remove("active"));
+    document.getElementById(tabId).style.display = "block";
+    evt.currentTarget.classList.add("active");
+  }
 
   function toggleComments(id, button) {
     const section = document.getElementById(id);
     const isVisible = section.style.display === "block";
-    
     section.style.display = isVisible ? "none" : "block";
     button.textContent = isVisible ? "▶" : "▼";
   }
@@ -217,9 +210,7 @@ function openTab(evt, tabId) {
     const replyForm = document.getElementById(`reply-form-${commentId}`);
     replyForm.style.display = (replyForm.style.display === "none" || !replyForm.style.display) ? "block" : "none";
   }
-</script>
 
-<script>
   document.addEventListener("DOMContentLoaded", () => {
     const alert = document.querySelector('.alert');
     if (alert) {

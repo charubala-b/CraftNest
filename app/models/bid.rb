@@ -1,18 +1,32 @@
 class Bid < ApplicationRecord
-  belongs_to :user
+  scope :accepted, -> { where(accepted: true) }
+  scope :pending, -> { where(accepted: false) }
+
+  scope :ordered_by_price_desc, -> { order(proposed_price: :desc) }
+
   belongs_to :project
-  has_one :client, through: :project
+  belongs_to :user
 
-  validates :proposed_price, numericality: { greater_than_or_equal_to: 0 , message: "price must be greater than 0 "}
-  validates :cover_letter, presence: true
+  has_one :contract, dependent: :destroy
 
-  after_update :notify_freelancer_if_accepted
+  validates :cover_letter, presence: { message: "can't be blank" },
+                         length: { minimum: 20, maximum: 100, too_short: "must be at least 20 characters", too_long: "must be at most 100 characters" }
+  validates :proposed_price, presence: true, numericality: { greater_than: 0 }
+
+  after_update :create_contract_if_accepted
 
   private
 
-  def notify_freelancer_if_accepted
-    if saved_change_to_accepted? && accepted
-      Rails.logger.info "✅ Bid ##{id} by #{user.name} has been accepted for project '#{project.title}'."
-    end
+  def create_contract_if_accepted
+    return unless saved_change_to_accepted? && accepted?
+
+    Contract.create!(
+      project: project,
+      client: project.client,
+      freelancer: user,
+      status: :active,
+      start_date: Time.current,
+      end_date: project.deadline
+    )
   end
 end

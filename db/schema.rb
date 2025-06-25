@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.2].define(version: 2025_06_22_155825) do
+ActiveRecord::Schema[7.2].define(version: 2025_06_25_070025) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
@@ -64,15 +64,6 @@ ActiveRecord::Schema[7.2].define(version: 2025_06_22_155825) do
     t.index ["sender_id"], name: "index_messages_on_sender_id"
   end
 
-  create_table "project_skills", force: :cascade do |t|
-    t.bigint "project_id", null: false
-    t.bigint "skill_id", null: false
-    t.datetime "created_at", null: false
-    t.datetime "updated_at", null: false
-    t.index ["project_id"], name: "index_project_skills_on_project_id"
-    t.index ["skill_id"], name: "index_project_skills_on_skill_id"
-  end
-
   create_table "projects", force: :cascade do |t|
     t.string "title"
     t.text "description"
@@ -97,8 +88,18 @@ ActiveRecord::Schema[7.2].define(version: 2025_06_22_155825) do
     t.index ["reviewer_id"], name: "index_reviews_on_reviewer_id"
   end
 
+  create_table "skill_assignments", force: :cascade do |t|
+    t.bigint "skill_id", null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.string "skillable_type"
+    t.bigint "skillable_id"
+    t.index ["skill_id"], name: "index_skill_assignments_on_skill_id"
+    t.index ["skillable_type", "skillable_id"], name: "index_skill_assignments_on_skillable_type_and_skillable_id"
+  end
+
   create_table "skills", force: :cascade do |t|
-    t.integer "skill_name", null: false
+    t.string "skill_name", null: false
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
   end
@@ -108,7 +109,6 @@ ActiveRecord::Schema[7.2].define(version: 2025_06_22_155825) do
     t.string "email", null: false
     t.string "password"
     t.integer "role"
-    t.integer "skills"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.index ["email"], name: "index_users_on_email", unique: true
@@ -124,10 +124,9 @@ ActiveRecord::Schema[7.2].define(version: 2025_06_22_155825) do
   add_foreign_key "messages", "projects"
   add_foreign_key "messages", "users", column: "receiver_id"
   add_foreign_key "messages", "users", column: "sender_id"
-  add_foreign_key "project_skills", "projects"
-  add_foreign_key "project_skills", "skills"
   add_foreign_key "projects", "users", column: "client_id"
   add_foreign_key "reviews", "projects"
   add_foreign_key "reviews", "users", column: "reviewee_id"
   add_foreign_key "reviews", "users", column: "reviewer_id"
+  add_foreign_key "skill_assignments", "skills"
 end

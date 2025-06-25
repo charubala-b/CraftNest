@@ -1,6 +1,5 @@
 class Skill < ApplicationRecord
-  enum skill_name: { ai: 0, ml: 1, ds: 2, react: 3 }
-
-  has_many :project_skills, dependent: :destroy
-  has_many :projects, through: :project_skills
+  has_many :skill_assignments, dependent: :destroy
+  has_many :users, through: :skill_assignments, source: :skillable, source_type: 'User'
+  has_many :projects, through: :skill_assignments, source: :skillable, source_type: 'Project'
 end

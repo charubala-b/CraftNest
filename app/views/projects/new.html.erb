@@ -11,6 +11,17 @@
 
 <div class="container mt-5">
   <h2 class="mb-4">New Project</h2>
+  <% if @project.errors.any? %>
+  <div class="alert alert-danger">
+    <h5>There were errors creating the project:</h5>
+    <ul>
+      <% @project.errors.full_messages.each do |msg| %>
+        <li><%= msg %></li>
+      <% end %>
+    </ul>
+  </div>
+<% end %>
+
 
   <%= form_with model: @project, local: true, data: { turbo: false } do |f| %>
     <div class="mb-3">
@@ -25,28 +36,54 @@
 
     <div class="mb-3">
       <%= f.label :budget, class: "form-label" %>
-      <%= f.number_field :budget, class: "form-control" %>
+      <%= f.number_field :budget, class: "form-control", min: 0 %>
     </div>
 
     <div class="mb-3">
       <%= f.label :deadline, class: "form-label" %>
-      <%= f.date_field :deadline, class: "form-control",min: Date.today %>
+      <%= f.date_field :deadline, class: "form-control", min: Date.today %>
     </div>
 
+    <!-- ✅ Grouped Skill Selection -->
     <div class="mb-3">
       <label class="form-label">Required Skills</label>
       <div class="form-check">
-        <% @skills.each do |skill| %>
+
+        <% default_skills = ['AI', 'ML', 'REACT', 'RoR', 'Node.js'] %>
+
+        <p class="fw-bold text-primary">Common Skills</p>
+        <% default_skills.each do |name| %>
+          <% skill = @skills.find { |s| s.skill_name.casecmp(name).zero? } %>
+          <% if skill %>
+            <div>
+              <%= check_box_tag "project[skill_ids][]", skill.id, @project.skill_ids.include?(skill.id), id: "skill_#{skill.id}", class: "form-check-input" %>
+              <%= label_tag "skill_#{skill.id}", skill.skill_name.humanize, class: "form-check-label" %>
+            </div>
+          <% end %>
+        <% end %>
+
+        <hr class="my-2">
+
+        <p class="fw-bold text-primary mt-2">Other Skills</p>
+        <% other_skills = @skills.reject { |s| default_skills.include?(s.skill_name.upcase) } %>
+        <% other_skills.each do |skill| %>
           <div>
             <%= check_box_tag "project[skill_ids][]", skill.id, @project.skill_ids.include?(skill.id), id: "skill_#{skill.id}", class: "form-check-input" %>
             <%= label_tag "skill_#{skill.id}", skill.skill_name.humanize, class: "form-check-label" %>
           </div>
         <% end %>
+
       </div>
     </div>
 
+    <!-- 🔹 New Skills Entry -->
+    <div class="mb-3">
+      <%= label_tag :new_skills, "Add New Skills (comma separated)", class: "form-label" %>
+      <%= text_field_tag :new_skills, '', class: "form-control", placeholder: "e.g. Vue.js, Django" %>
+      <small class="text-muted">These skills will be created and added to the project automatically.</small>
+    </div>
 
-    <%= f.submit "Create Project", class: "btn btn-primary" %>
+    <%= f.submit "Create Project", class: "btn btn-primary mt-3" %>
   <% end %>
 </div>
 
