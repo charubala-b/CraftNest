@@ -9,23 +9,31 @@
 
 <h1>My Contracts</h1>
 
-<% @contracts.each do |contract| %>
-  <div class="contract-card">
-    <p><strong>Project:</strong> <%= contract.project.title %></p>
-    <p><strong>Client:</strong> <%= contract.client.name %></p>
-    <p><strong>Status:</strong> <%= contract.status.humanize %></p>
+<% if @contracts.any? %>
+  <% @contracts.each do |contract| %>
+    <div class="contract-card">
+      <p><strong>Project:</strong> <%= contract.project.title %></p>
+      <p><strong>Client:</strong> <%= contract.client.name %></p>
+      <p><strong>Status:</strong> <%= contract.status.humanize %></p>
 
-    <% if contract.completed? %>
-      <% review = Review.find_by(reviewer_id: @freelancer.id, project_id: contract.project_id) %>
-      <% if review.present? %>
-        <p>You reviewed already: ⭐ <%= review.ratings %></p>
+      <% if contract.completed? %>
+        <% review = contract.project.reviews.find_by(reviewer_id: current_user.id) %>
+        <% if review.present? %>
+          <div class="review-block">
+            <p><strong>You already reviewed:</strong> ⭐ <%= review.ratings %></p>
+            <p><%= review.review %></p>
+          </div>
+        <% else %>
+          <%= link_to "Write Review", new_review_path(reviewee_id: contract.client_id, project_id: contract.project_id), class: "btn btn-primary" %>
+        <% end %>
       <% else %>
-        <%= link_to "Write Review", new_review_path(reviewee_id: contract.client_id, project_id: contract.project_id), class: "btn btn-primary" %>
+        <p class="text-muted"><em>You can review this client after the contract is completed.</em></p>
       <% end %>
-    <% end %>
-  </div>
+    </div>
+  <% end %>
+<% else %>
+  <p>No contracts found.</p>
 <% end %>
-
 
 <script>
   document.addEventListener("DOMContentLoaded", () => {

@@ -164,7 +164,7 @@
   <div id="messages" class="tab-content">
     <div class="chat-list">
       <% @contracts.each do |contract| %>
-        <% if contract.client_id == @current_user.id %>
+        <% if contract.client_id == current_user.id %>
           <div class="chat-link-card">
             <%= link_to chat_room_path(contract.freelancer_id, contract.project_id), class: "chat-link-button" do %>
               💬 <strong><%= contract.freelancer.name %></strong> on <em><%= contract.project.title %></em>

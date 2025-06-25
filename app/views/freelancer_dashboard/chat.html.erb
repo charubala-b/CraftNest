@@ -9,19 +9,17 @@
   <% end %>
 </div>
 
-
-
 <div class="chat-container">
   <div class="chat-header">
     Chat with <%= @client.name %> on <%= @project.title %>
   </div>
 
-  <div class="chat-messages">
+  <div class="chat-messages" id="chat-messages">
     <% if @messages.empty? %>
       <p class="no-messages">No messages yet.</p>
     <% else %>
       <% @messages.each do |msg| %>
-        <div class="message <%= msg.sender_id == @current_user.id ? 'sent' : 'received' %>">
+        <div class="message <%= msg.sender_id == current_user.id ? 'sent' : 'received' %>">
           <%= msg.body %>
         </div>
       <% end %>
@@ -30,26 +28,40 @@
 
   <div class="chat-input">
     <%= form_with model: @new_message, url: messages_path, local: true, data: { turbo: false } do |f| %>
-      <%= f.hidden_field :sender_id, value: @current_user.id %>
       <%= f.hidden_field :receiver_id, value: @client.id %>
       <%= f.hidden_field :project_id, value: @project.id %>
-      <%= f.text_area :body, rows: 1, placeholder: "Type a message..." %>
+      <%= f.text_area :body, rows: 1, placeholder: "Type a message...", class: "form-control mb-2" %>
       <%= f.submit "Send", class: "btn btn-primary" %>
     <% end %>
-
   </div>
 </div>
 
-
 <script>
-  document.addEventListener("DOMContentLoaded", () => {
-    const alert = document.querySelector('.alert');
-    if (alert) {
+  function scrollChatToBottom() {
+    const chatBox = document.getElementById("chat-messages");
+    if (chatBox) {
+      chatBox.scrollTop = chatBox.scrollHeight;
+    }
+  }
+
+  function dismissFlashMessages() {
+    document.querySelectorAll('.alert').forEach(alert => {
       setTimeout(() => {
         alert.classList.remove("show");
         alert.classList.add("fade");
         alert.remove();
       }, 3000);
-    }
+    });
+  }
+
+  document.addEventListener("DOMContentLoaded", () => {
+    dismissFlashMessages();
+    scrollChatToBottom();
+  });
+
+  document.addEventListener("turbo:load", () => {
+    dismissFlashMessages();
+    scrollChatToBottom();
   });
 </script>
+
