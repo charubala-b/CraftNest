@@ -1,7 +1,14 @@
 class Users::RegistrationsController < Devise::RegistrationsController
   before_action :configure_sign_up_params, only: [:create]
   # before_action :redirect_if_authenticated, only: [:new, :create]
-
+  
+  def after_sign_up_path_for(resource)
+    if resource.freelancer?
+      freelancer_dashboard_path
+    else
+      client_dashboard_path
+    end
+  end
   def create
     build_resource(sign_up_params.except(:skill_ids, :new_skills))
 
@@ -45,4 +52,14 @@ class Users::RegistrationsController < Devise::RegistrationsController
   # def redirect_if_authenticated
   #   redirect_to after_sign_in_path_for(current_user), alert: "You are already signed in." if user_signed_in?
   # end
+
+  private
+
+  def sign_up_params
+    params.require(:user).permit(:name, :email, :password, :password_confirmation, :role, :new_skills, skill_ids: [])
+  end
+
+  def account_update_params
+    params.require(:user).permit(:name, :email, :password, :password_confirmation, :current_password, :role, :new_skills, skill_ids: [])
+  end
 end
