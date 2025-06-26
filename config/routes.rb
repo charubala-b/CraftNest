@@ -1,7 +1,10 @@
 Rails.application.routes.draw do
-  # Devise Authentication
-  devise_for :users, controllers: { registrations: 'users/registrations', passwords: 'users/passwords' }
+  devise_for :users, controllers: { sessions: 'users/sessions',registrations: 'users/registrations', passwords: 'users/passwords' }
 
+  devise_for :admin_users, ActiveAdmin::Devise.config
+  ActiveAdmin.routes(self)
+  # Devise Authentication
+  
 
 root to: redirect { |params, req|
   if req.env['warden'].authenticate?

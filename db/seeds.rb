@@ -12,3 +12,4 @@
 Skill.skill_names.each_key do |key|
   Skill.find_or_create_by(skill_name: Skill.skill_names[key])
 end
+AdminUser.create!(email: 'admin@example.com', password: 'password', password_confirmation: 'password') if Rails.env.development?

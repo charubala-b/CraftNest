@@ -6,3 +6,4 @@
 //= link dashboard.css
 //= link chat.css
 //= link project.css
+//= link application.js

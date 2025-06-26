@@ -32,9 +32,14 @@ class User < ApplicationRecord
   has_many :skill_assignments, as: :skillable, dependent: :destroy
   has_many :skills, through: :skill_assignments
 
+  def self.ransackable_attributes(auth_object = nil)
+    %w[id name email role created_at]
+  end
+  
   private
 
   def downcase_email
     self.email = email.downcase if email.present?
   end
 end
+
