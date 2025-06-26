@@ -1,6 +1,6 @@
 class Users::RegistrationsController < Devise::RegistrationsController
   before_action :configure_sign_up_params, only: [:create]
-  before_action :redirect_if_authenticated, only: [:new, :create]
+  # before_action :redirect_if_authenticated, only: [:new, :create]
 
   def create
     build_resource(sign_up_params.except(:skill_ids, :new_skills))
@@ -10,11 +10,9 @@ class Users::RegistrationsController < Devise::RegistrationsController
       all_skill_ids = Array(params[:user][:skill_ids]).map(&:to_i) + new_skill_ids
       assign_skills(resource, all_skill_ids.uniq)
 
-      # ✅ Ensure user is NOT signed in
       yield resource if block_given?
       set_flash_message! :notice, :signed_up_but_unconfirmed if is_flashing_format?
 
-      # ✅ Redirect to login path
       redirect_to new_user_session_path, notice: "Account created successfully. Please log in."
     else
       clean_up_passwords resource

@@ -3,11 +3,9 @@ class SkillAssignmentsController < ApplicationController
   skill_id = params[:skill_id]
   new_skill_name = params[:new_skill_name].to_s.strip
 
-  # Use existing skill if selected
   if skill_id.present?
     skill = Skill.find_by(id: skill_id)
   elsif new_skill_name.present?
-    # Create new skill if it doesn't exist (case-insensitive)
     skill = Skill.where('LOWER(skill_name) = ?', new_skill_name.downcase).first_or_create(skill_name: new_skill_name)
   end
 
