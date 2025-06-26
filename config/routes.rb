@@ -1,6 +1,6 @@
 Rails.application.routes.draw do
   # Devise Authentication
-  devise_for :users, controllers: { registrations: 'users/registrations' }
+  devise_for :users, controllers: { registrations: 'users/registrations', passwords: 'users/passwords' }
 
 
 root to: redirect { |params, req|

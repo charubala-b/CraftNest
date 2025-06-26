@@ -21,6 +21,7 @@ gem "jbuilder"
 # gem "devise"
 # Gemfile
 gem 'devise'
+# gem 'activeadmin'
 
 # Use Kredis to get higher-level data types in Redis [https://github.com/rails/kredis]
 # gem "kredis"

@@ -1,3 +1,5 @@
+<%= javascript_importmap_tags %>
+
 <div id="flash-messages" class="position-fixed top-0 end-0 p-3" style="z-index: 1050;">
   <% flash.each do |key, message| %>
     <div class="alert alert-<%= key == "notice" ? "success" : "danger" %> alert-dismissible fade show" role="alert">
