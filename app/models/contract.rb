@@ -1,4 +1,5 @@
 class Contract < ApplicationRecord
+  include Ransackable
   belongs_to :project
   belongs_to :freelancer, class_name: 'User'
   belongs_to :client, class_name: 'User'
