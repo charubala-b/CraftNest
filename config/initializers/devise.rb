@@ -305,10 +305,28 @@ Devise.setup do |config|
   # Note: These might become the new default in future versions of Devise.
   config.responder.error_status = :unprocessable_entity
   config.responder.redirect_status = :see_other
+  config.scoped_views = true
 
   # ==> Configuration for :registerable
 
   # When set to false, does not sign a user in automatically after their password is
   # changed. Defaults to true, so a user is signed in automatically after changing a password.
   # config.sign_in_after_change_password = true
+  config.omniauth :google_oauth2, "60871882428-tohfumg8d7rbhhfc0rb4lpaa1q7div4s.apps.googleusercontent.com", "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", {
+  scope: 'userinfo.email, userinfo.profile',
+  prompt: 'select_account',
+  image_aspect_ratio: 'square',
+  image_size: 50
+  }
+Rails.logger.info("OmniAuth providers loaded: #{Devise.omniauth_configs.keys}")
+  OmniAuth.config.request_validation_phase = proc do |env|
+  strategy = OmniAuth::Strategy.from_env(env)
+  if strategy.name.to_s == "google_oauth2"
+    # Allow GET requests without authenticity token
+    true
+  else
+    OmniAuth::AuthenticityTokenProtection.call(env)
+  end
+end
+
 end

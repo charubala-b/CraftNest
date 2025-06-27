@@ -1,5 +1,10 @@
 Rails.application.routes.draw do
-  devise_for :users, controllers: { sessions: 'users/sessions',registrations: 'users/registrations', passwords: 'users/passwords' }
+  devise_for :users, controllers: { sessions: 'users/sessions',registrations: 'users/registrations', passwords: 'users/passwords'}
+  devise_scope :user do
+    get '/users/auth/:provider', to: 'users/omniauth_callbacks#passthru', as: :user_omniauth_authorize
+    get '/users/auth/:provider/callback', to: 'users/omniauth_callbacks#google_oauth2', as: :user_omniauth_callback
+  end
+
 
   devise_for :admin_users, ActiveAdmin::Devise.config
   ActiveAdmin.routes(self)
@@ -61,5 +66,7 @@ root to: redirect { |params, req|
   resources :contracts, only: [:update]
   # config/routes.rb
 resources :skill_assignments, only: [:create, :destroy]
+get '/test_google', to: redirect('/users/auth/google_oauth2')
+
 
 end

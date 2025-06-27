@@ -1,4 +1,5 @@
 class Comment < ApplicationRecord
+  include Ransackable
   belongs_to :user
   belongs_to :project
   belongs_to :parent, class_name: "Comment", optional: true
@@ -8,6 +9,7 @@ class Comment < ApplicationRecord
 
   after_create :notify_project_owner
   before_destroy :log_deletion
+
 
   private
 

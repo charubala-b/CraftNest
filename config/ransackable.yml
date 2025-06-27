@@ -1,0 +1,126 @@
+Bid:
+  attributes:
+    - id
+    - user_id
+    - project_id
+    - proposed_price
+    - cover_letter
+    - accepted
+    - created_at
+    - price_above_100
+  associations:
+    - user
+    - project
+
+Comment:
+  attributes:
+    - id
+    - body
+    - user_id
+    - project_id
+    - parent_id
+    - created_at
+    - updated_at
+  associations:
+    - user
+    - project
+    - parent
+    - replies
+
+Contract:
+  attributes:
+    - id
+    - project_id
+    - client_id
+    - freelancer_id
+    - status
+    - start_date
+    - end_date
+    - created_at
+  associations:
+    - project
+    - client
+    - freelancer
+
+Message:
+  attributes:
+    - id
+    - sender_id
+    - receiver_id
+    - body
+    - project_id
+    - created_at
+  associations:
+    - sender
+    - receiver
+    - project
+
+Project:
+  attributes:
+    - id
+    - title
+    - description
+    - client_id
+    - deadline
+    - created_at
+  associations:
+    - client
+    - bids
+    - comments
+    - contracts
+    - skill_assignments
+    - skills
+
+Review:
+  attributes:
+    - id
+    - reviewer_id
+    - reviewee_id
+    - project_id
+    - ratings
+    - review
+    - created_at
+    - updated_at
+  associations:
+    belongs_to:
+      reviewer: User
+      reviewee: User
+      project: Project
+
+
+User:
+  attributes:
+    - id
+    - name
+    - email
+    - role
+    - created_at
+    - created_year
+    - created_month
+  associations:
+    - bids
+    - comments
+    - projects
+    - skill_assignments
+    - skills
+    - sent_messages
+    - received_messages
+    - reviews_given
+    - reviews_received
+Skill:
+  attributes:
+    - id
+    - name
+    - created_at
+    - updated_at
+  associations:
+    - skill_assignments
+AdminUser:
+  attributes:
+    - id
+    - email
+    - created_at
+    - updated_at
+    - sign_in_count
+    - current_sign_in_at
+  associations: []

@@ -1,9 +1,11 @@
 class User < ApplicationRecord
   # Include default devise modules. Others available are:
   # :confirmable, :lockable, :timeoutable, :trackable and :omniauthable
+  include Ransackable
   devise :database_authenticatable, :registerable,
-         :recoverable, :rememberable, :validatable
-  
+       :recoverable, :rememberable, :validatable,
+       :omniauthable, omniauth_providers: [:google_oauth2]
+ 
 
   before_save :downcase_email
 
@@ -32,11 +34,16 @@ class User < ApplicationRecord
   has_many :skill_assignments, as: :skillable, dependent: :destroy
   has_many :skills, through: :skill_assignments
 
-  def self.ransackable_attributes(auth_object = nil)
-    %w[id name email role created_at]
-  end
   
-  private
+
+  ransacker :created_year do
+    Arel.sql("EXTRACT(YEAR FROM users.created_at)::integer")
+  end
+
+  ransacker :created_month do
+    Arel.sql("EXTRACT(MONTH FROM users.created_at)::integer")
+  end
+
 
   def downcase_email
     self.email = email.downcase if email.present?
