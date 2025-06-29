@@ -1,14 +1,19 @@
 ActiveAdmin.register Message do
+  actions :index, :show, :destroy
   permit_params :sender_id, :receiver_id, :content
 
   includes :sender, :receiver
+
+  scope :all, default: true
+  scope("Sent Today") { |messages| messages.where(created_at: Time.zone.today.all_day) }
+  scope("Last 7 Days") { |messages| messages.where("created_at >= ?", 7.days.ago) }
 
   index do
     selectable_column
     id_column
     column("Sender") { |m| m.sender.email }
     column("Receiver") { |m| m.receiver.email }
-    column :content
+    column :body
     column :created_at
     actions
   end

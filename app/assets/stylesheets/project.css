@@ -1,19 +1,48 @@
+/* Reset margins and paddings */
 body, h1, h2, h3, p {
   margin: 0;
   padding: 0;
 }
 
+/* Body Styling */
 body {
-  background: #becae2;
-  font-family: 'Segoe UI', sans-serif;
-  color: #333;
+  background: #e4e9f2;
+  font-family: 'Segoe UI', Roboto, sans-serif;
+  color: #2e2e2e;
+  font-size: 16px;
+  line-height: 1.6;
 }
 
-.container .mt-5{
+/* Container Styling */
+.container .mt-5 {
   max-width: 1100px;
-  margin: 40px auto;
-  padding: 30px;
-  background: #964c4c;
+  margin: 60px auto;
+  padding: 40px;
+  background: #fff;
   border-radius: 12px;
-  box-shadow: 0 0 20px rgba(0,0,0,0.05);
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.08);
+  transition: all 0.3s ease;
+}
+
+/* Optional: Header or Title inside container */
+.container .mt-5 h1,
+.container .mt-5 h2 {
+  font-size: 28px;
+  font-weight: 600;
+  color: #3a3a3a;
+  margin-bottom: 20px;
+  border-bottom: 2px solid #dee2e6;
+  padding-bottom: 8px;
+}
+
+/* Optional Paragraph/Text Styling */
+.container .mt-5 p {
+  font-size: 15px;
+  color: #555;
+  margin-bottom: 16px;
+}
+
+/* Add hover effect if it's card-like */
+.container .mt-5:hover {
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.1);
 }

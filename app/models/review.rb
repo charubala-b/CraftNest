@@ -1,5 +1,8 @@
 class Review < ApplicationRecord
   include Ransackable
+
+  after_create :notify_reviewee
+
   belongs_to :reviewer, class_name: 'User'
   belongs_to :reviewee, class_name: 'User'
   belongs_to :project
@@ -7,8 +10,6 @@ class Review < ApplicationRecord
   validates :ratings, presence: true, inclusion: { in: 1..5 }
   validates :review, presence: true, length: { minimum: 20 , maximum: 100}
   validates :reviewer_id, uniqueness: { scope: :project_id, message: "has already reviewed this project." }
-
-  after_create :notify_reviewee
 
 private
 

@@ -1,6 +1,13 @@
 ActiveAdmin.register Review do
   permit_params :reviewer_id, :reviewee_id, :project_id, :ratings, :review
 
+
+  scope :all, default: true
+  scope("5-Star Reviews")        { |reviews| reviews.where(ratings: 5) }
+  scope("Low Ratings (1–2 Stars)") { |reviews| reviews.where(ratings: 1..2) }
+  scope("Recent Reviews")        { |reviews| reviews.where("created_at >= ?", 7.days.ago) }
+  scope("Old Reviews")           { |reviews| reviews.where("created_at < ?", 30.days.ago) }
+
   index do
     selectable_column
     id_column

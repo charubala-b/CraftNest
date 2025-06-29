@@ -27,10 +27,14 @@
   
   <% unless devise_controller? && (controller_name == "sessions" && action_name == "new") || 
              (controller_name == "registrations" && action_name.in?(%w[new create])) %>
-    <% if user_signed_in? %>
-      <%= button_to "Logout", destroy_user_session_path, method: :delete, class: "btn btn-danger" %>
-    <% end %>
+  <% if user_signed_in? %>
+    <div style="position: fixed; top: 20px; right: 20px; z-index: 1000;">
+      <%= button_to "Logout", destroy_user_session_path, method: :delete,
+          class: "btn btn-danger", style: "padding: 8px 16px; font-weight: bold; border-radius: 6px;" %>
+    </div>
   <% end %>
+<% end %>
+
   <%= yield %>
 </body>
 

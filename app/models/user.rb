@@ -1,6 +1,4 @@
 class User < ApplicationRecord
-  # Include default devise modules. Others available are:
-  # :confirmable, :lockable, :timeoutable, :trackable and :omniauthable
   include Ransackable
   devise :database_authenticatable, :registerable,
        :recoverable, :rememberable, :validatable,
@@ -30,7 +28,6 @@ class User < ApplicationRecord
 
   has_many :comments, dependent: :destroy
 
-  # Skills (polymorphic)
   has_many :skill_assignments, as: :skillable, dependent: :destroy
   has_many :skills, through: :skill_assignments
 
