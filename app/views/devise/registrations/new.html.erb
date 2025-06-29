@@ -1,5 +1,6 @@
 <%= stylesheet_link_tag "users", media: "all", "data-turbo-track": "reload" %>
 
+<!-- Flash Messages -->
 <div id="flash-messages" class="position-fixed top-0 end-0 p-3" style="z-index: 1050;">
   <% flash.each do |key, message| %>
     <div class="alert alert-<%= key == "notice" ? "success" : "danger" %> alert-dismissible fade show" role="alert">
@@ -9,6 +10,7 @@
   <% end %>
 </div>
 
+<!-- Registration Form -->
 <div class="form-container">
   <%= form_for(resource, as: resource_name, url: registration_path(resource_name), html: { class: "needs-validation" }) do |f| %>
     <h2>Register</h2>
@@ -40,32 +42,27 @@
       <%= f.select :role, User.roles.keys.map { |r| [r.titleize, r] }, {}, { class: "form-select", id: "user_role_select", required: true } %>
     </div>
 
-    <!-- ✅ Freelancer Skill Section (conditional) -->
+    <!-- Freelancer Skills Section -->
     <div id="skill-section" style="display: none;">
-      <div class="form-group">
-        <label>Select Skills</label>
-        <% default_skills = ['AI', 'ML', 'REACT', 'RoR', 'Node.js'] %>
+<div>
+  <label>Select Skills</label>
+  <div class="dropdown">
+    <button class="btn btn-outline-secondary dropdown-toggle" type="button" id="skillsDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+      Choose Skills
+    </button>
+    <ul class="dropdown-menu p-3" aria-labelledby="skillsDropdown" style="max-height: 300px; overflow-y: auto;">
+      <% Skill.order(:skill_name).distinct.each do |skill| %>
+        <li>
+          <%= check_box_tag "user[skill_ids][]" %>
+          <%= label_tag "skill_#{skill.id}", skill.skill_name.titleize, style: "font-size: 14px;" %>
+        </li>
+      <% end %>
+    </ul>
+  </div>
+</div>
 
-        <p class="fw-bold text-primary">Common Skills</p>
-        <% default_skills.each do |name| %>
-          <% skill = Skill.find_by("LOWER(skill_name) = ?", name.downcase) %>
-          <% if skill %>
-            <div>
-              <%= check_box_tag "user[skill_ids][]", skill.id, false, id: "skill_#{skill.id}", class: "form-check-input" %>
-              <%= label_tag "skill_#{skill.id}", skill.skill_name.humanize, class: "form-check-label" %>
-            </div>
-          <% end %>
-        <% end %>
 
-        <hr class="my-2">
-        <p class="fw-bold text-primary">Other Skills</p>
-        <% (Skill.all - Skill.where("UPPER(skill_name) IN (?)", default_skills.map(&:upcase))).each do |skill| %>
-          <div>
-            <%= check_box_tag "user[skill_ids][]", skill.id, false, id: "skill_#{skill.id}", class: "form-check-input" %>
-            <%= label_tag "skill_#{skill.id}", skill.skill_name.humanize, class: "form-check-label" %>
-          </div>
-        <% end %>
-      </div>
+
 
       <div class="form-group mt-3">
         <%= label_tag :new_skills, "Add New Skills (comma separated)" %>
@@ -82,15 +79,16 @@
   <% end %>
 </div>
 
-
+<!-- JS to Toggle Skill Section and Auto-dismiss Alerts -->
 <script>
   document.addEventListener("DOMContentLoaded", () => {
     const roleSelect = document.getElementById("user_role_select");
     const skillSection = document.getElementById("skill-section");
-    const alert = document.querySelector('.alert');
 
     const toggleSkillSection = () => {
-      skillSection.style.display = roleSelect.value === "freelancer" ? "block" : "none";
+      if (roleSelect && skillSection) {
+        skillSection.style.display = roleSelect.value === "freelancer" ? "block" : "none";
+      }
     };
 
     if (roleSelect) {
@@ -98,6 +96,8 @@
       toggleSkillSection();
     }
 
+    // Auto-dismiss flash
+    const alert = document.querySelector(".alert");
     if (alert) {
       setTimeout(() => {
         alert.classList.remove("show");

@@ -1,12 +1,13 @@
 class Message < ApplicationRecord
   include Ransackable
+
+  after_create :notify_receiver
+
   belongs_to :sender, class_name: "User"
   belongs_to :receiver, class_name: "User"
   belongs_to :project
 
   validates :body, presence: true, length: { minimum: 2 , maximum: 100}
-
-  after_create :notify_receiver
 
 private
 

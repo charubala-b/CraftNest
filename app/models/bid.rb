@@ -4,6 +4,8 @@ class Bid < ApplicationRecord
   scope :pending, -> { where(accepted: [false, nil]) }
   scope :ordered_by_price_desc, -> { order(proposed_price: :desc) }
 
+  after_update :create_contract_if_accepted
+
   belongs_to :project
   belongs_to :user
 
@@ -12,8 +14,6 @@ class Bid < ApplicationRecord
   validates :cover_letter, presence: { message: "can't be blank" },
                            length: { minimum: 20, maximum: 100, too_short: "must be at least 20 characters", too_long: "must be at most 100 characters" }
   validates :proposed_price, presence: true, numericality: { greater_than: 0 }
-
-  after_update :create_contract_if_accepted
 
   ransacker :price_above_100, type: :boolean do
     Arel.sql("CASE WHEN proposed_price > 100 THEN TRUE ELSE FALSE END")

@@ -55,11 +55,16 @@
           <% end %>
         </p>
 
-        <%= form_with model: [project, Bid.new], local: true, data: { turbo: false } do |f| %>
-          <%= f.text_area :cover_letter, placeholder: "Enter your cover letter drive link", class: "form-control mb-2" %>
-          <%= f.number_field :proposed_price, placeholder: "Proposed Price", class: "form-control mb-2" %>
-          <%= f.submit "Send Bid", class: "btn btn-primary" %>
-        <% end %>
+<%= form_with model: [project, Bid.new], local: true do |f| %>
+  <%= f.hidden_field :project_id, value: project.id %>
+  
+  <%= f.text_area :cover_letter, placeholder: "Enter your cover letter drive link", class: "form-control mb-2", required: true %>
+  <%= f.number_field :proposed_price, placeholder: "Proposed Price", class: "form-control mb-2", required: true %>
+
+  <%= f.submit "Send Bid", class: "btn btn-primary" %>
+<% end %>
+
+
 
         <!-- 🔹 Comments Section -->
         <button onclick="toggleComments('comments-<%= project.id %>', this)">▶</button> Show Comments
@@ -219,7 +224,10 @@
 
   <div class="mb-2">
     <label class="form-label">Select from Existing Skills</label>
-    <%= select_tag :skill_id, options_from_collection_for_select(@skills, :id, :skill_name), include_blank: "Choose a skill", class: "form-select" %>
+    <% unselected_skills = @skills.reject { |skill| current_user.skills.include?(skill) } %>
+<%= select_tag :skill_id,
+      options_from_collection_for_select(unselected_skills, :id, :skill_name),
+      include_blank: "Choose a skill", class: "form-select" %>
   </div>
 
   <div class="mb-2">

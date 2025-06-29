@@ -3,6 +3,11 @@ ActiveAdmin.register Project do
 
   includes :client
 
+  scope :all, default: true
+  scope("Created Today") { |projects| projects.where(created_at: Time.zone.today.all_day) }
+  scope("Created This Week") { |projects| projects.where("created_at >= ?", 7.days.ago) }
+  scope("Without Any Bids") { |projects| projects.left_joins(:bids).where(bids: { id: nil }) }
+
   index do
     selectable_column
     id_column

@@ -1,7 +1,14 @@
 ActiveAdmin.register Contract do
+  actions :index, :show, :destroy
   permit_params :freelancer_id, :client_id, :project_id, :start_date, :end_date
 
   includes :freelancer, :client, :project
+
+  scope :all, default: true
+  scope("Active Contracts") { |contracts| contracts.where("start_date <= ? AND end_date >= ?", Time.current, Time.current) }
+  scope("Completed Contracts") { |contracts| contracts.where("end_date < ?", Time.current) }
+  scope("Upcoming Contracts") { |contracts| contracts.where("start_date > ?", Time.current) }
+  scope("Ongoing Without End Date") { |contracts| contracts.where("start_date <= ? AND end_date IS NULL", Time.current) }
 
   index do
     selectable_column

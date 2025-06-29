@@ -24,9 +24,11 @@ class FreelancerDashboardController < ApplicationController
   end
 
   def add_skill
-    skill_id = params[:skill_id]
+    skill_id = params[:skill_id].to_i
 
-    if current_user.skills.exists?(id: skill_id)
+    if skill_id.zero?
+      flash[:alert] = "Please select a valid skill."
+    elsif current_user.skills.exists?(id: skill_id)
       flash[:alert] = "Skill already exists in your profile."
     else
       current_user.skill_assignments.create(skill_id: skill_id)
@@ -37,17 +39,24 @@ class FreelancerDashboardController < ApplicationController
   end
 
   def create_custom_skill
-    skill_name = params[:new_skill_name].strip
+    skill_name = params[:new_skill_name].to_s.strip.downcase
 
     if skill_name.blank?
       flash[:alert] = "Skill name cannot be blank."
     else
-      skill = Skill.find_or_create_by(skill_name: skill_name.titleize)
-      if current_user.skills.exists?(id: skill.id)
-        flash[:alert] = "Skill already exists in your profile."
+      existing_skill = Skill.find_by("LOWER(skill_name) = ?", skill_name)
+
+      if existing_skill
+        if current_user.skills.exists?(id: existing_skill.id)
+          flash[:alert] = "Skill '#{existing_skill.skill_name}' already exists in your profile."
+        else
+          current_user.skill_assignments.create(skill: existing_skill)
+          flash[:notice] = "Skill '#{existing_skill.skill_name}' added to your profile."
+        end
       else
-        current_user.skill_assignments.create(skill: skill)
-        flash[:notice] = "Custom skill '#{skill.skill_name}' added to your profile."
+        new_skill = Skill.create(skill_name: skill_name.titleize)
+        current_user.skill_assignments.create(skill: new_skill)
+        flash[:notice] = "Custom skill '#{new_skill.skill_name}' added to your profile."
       end
     end
 
