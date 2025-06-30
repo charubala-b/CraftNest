@@ -6,10 +6,10 @@ ActiveAdmin.register Comment, as: "UserComment" do
   scope :all, default: true
   scope("Top Level") { |comments| comments.where(parent_id: nil) }
 
-  filter :user
-  filter :project
-  filter :created_at
-  filter :body
+  filter :user, as: :select, collection: -> { User.all.map { |u| [u.name, u.id] } }
+  filter :project, as: :select, collection: -> { Project.all.map { |p| [p.title, p.id] } }
+  filter :created_at, as: :date_range
+  filter :body, as: :string
 
   index title: "User Comments" do
     selectable_column

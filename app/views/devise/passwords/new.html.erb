@@ -3,7 +3,7 @@
 <div class="container mt-5" style="max-width: 400px;">
   <h2 class="mb-4 text-center">🔐 Forgot your password?</h2>
 
-  <%= form_with model: resource, url: password_path(resource_name), local: true, html: { class: "needs-validation" } do |f| %>
+  <%= form_with model: resource, url: password_path(resource_name), local: true,  data: { turbo: false } , html: { class: "needs-validation" } do |f| %>
     <%= render "devise/shared/error_messages", resource: resource %>
 
     <div class="mb-3">

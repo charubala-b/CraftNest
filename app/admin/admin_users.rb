@@ -12,7 +12,7 @@ ActiveAdmin.register AdminUser do
     actions
   end
 
-  filter :email
+  filter :email_cont, as: :string, label: "Email Contains"
   filter :created_at
 
   form do |f|
