@@ -8,7 +8,6 @@ Rails.application.routes.draw do
 
   devise_for :admin_users, ActiveAdmin::Devise.config
   ActiveAdmin.routes(self)
-  # Devise Authentication
   
 
 root to: redirect { |params, req|
@@ -67,6 +66,16 @@ root to: redirect { |params, req|
   # config/routes.rb
 resources :skill_assignments, only: [:create, :destroy]
 get '/test_google', to: redirect('/users/auth/google_oauth2')
+
+# newly added
+namespace :api do
+  namespace :v1 do
+    resources :reviews, only: [:create] do
+      get ':project_id/:reviewer_id', to: 'reviews#show', on: :collection
+    end
+  end
+end
+
 
 
 end
