@@ -1,7 +1,115 @@
-<%= javascript_importmap_tags %>
-
 <%= stylesheet_link_tag "dashboard", media: "all", "data-turbo-track": "reload" %>
+<!-- 🔹 JS Scripts -->
+<script>
+  function openTab(evt, tabId) {
+    document.querySelectorAll(".tab-content").forEach(el => el.style.display = "none");
+    document.querySelectorAll(".tab-button").forEach(el => el.classList.remove("active"));
+    document.getElementById(tabId).style.display = "block";
+    evt.currentTarget.classList.add("active");
+  }
 
+  function toggleComments(id, button) {
+    const section = document.getElementById(id);
+    const isVisible = section.style.display === "block";
+    section.style.display = isVisible ? "none" : "block";
+    button.textContent = isVisible ? "▶" : "▼";
+  }
+
+  function toggleReplyForm(commentId) {
+    const replyForm = document.getElementById(`reply-form-${commentId}`);
+    replyForm.style.display = (replyForm.style.display === "none" || !replyForm.style.display) ? "block" : "none";
+  }
+
+  document.addEventListener("DOMContentLoaded", () => {
+    const alert = document.querySelector('.alert');
+    if (alert) {
+      setTimeout(() => {
+        alert.classList.remove("show");
+        alert.classList.add("fade");
+        alert.remove();
+      }, 3000);
+    }
+  });
+
+
+  document.addEventListener("DOMContentLoaded", () => {
+    document.querySelectorAll("[id^='client-review-section-'], [id^='freelancer-review-section-']").forEach(section => {
+      const projectId = section.dataset.projectId;
+      const reviewerId = section.dataset.reviewerId;
+      const revieweeId = section.dataset.revieweeId;
+
+      fetch(`/api/v1/reviews/${projectId}/${reviewerId}`)
+        .then(res => res.json())
+        .then(data => {
+          if (data.id) {
+            section.innerHTML = `
+              <div class="review-card">
+                <p>⭐ ${data.ratings} - ${data.review}</p>
+                <p><em>by you</em></p>
+              </div>
+            `;
+          } else {
+            section.innerHTML = `
+              <form onsubmit="submitReview(event, ${projectId}, ${revieweeId})">
+                <label>Rating (1-5):</label>
+                <input type="number" name="ratings" min="1" max="5" required><br>
+                <label>Review:</label>
+                <textarea name="review" minlength="20" maxlength="100" required></textarea><br>
+                <button type="submit" class="btn btn-sm btn-warning">Submit Review</button>
+              </form>
+              <div class="review-message"></div>
+            `;
+          }
+        });
+    });
+  });
+
+  function submitReview(e, projectId, revieweeId) {
+  e.preventDefault();
+  const form = e.target;
+  const messageEl = form.nextElementSibling;
+  const ratings = form.ratings.value;
+  const reviewText = form.review.value;
+
+  fetch('/api/v1/reviews', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'X-CSRF-Token': document.querySelector('meta[name="csrf-token"]').content
+    },
+    body: JSON.stringify({
+      review: {
+        ratings: ratings,
+        review: reviewText,
+        project_id: projectId,
+        reviewee_id: revieweeId
+      }
+    })
+  })
+  .then(res => res.json())
+  .then(data => {
+    if (data.errors) {
+      messageEl.innerHTML = `<p style="color:red;">${data.errors.join(', ')}</p>`;
+    } else {
+      // Re-fetch and display the newly created review
+      fetch(`/api/v1/reviews/${projectId}/${document.querySelector('meta[name="current-user-id"]').content}`)
+        .then(res => res.json())
+        .then(newData => {
+          if (newData.id) {
+            form.parentElement.innerHTML = `
+              <div class="review-card">
+                <p>⭐ ${newData.ratings} - ${newData.review}</p>
+                <p><em>by you</em></p>
+              </div>
+            `;
+          }
+        });
+    }
+  });
+}
+
+
+</script>
 <div id="flash-messages" class="position-fixed top-0 end-0 p-3" style="z-index: 1050;">
   <% flash.each do |key, message| %>
     <div class="alert alert-<%= key == "notice" ? "success" : "danger" %> alert-dismissible fade show" role="alert">
@@ -133,7 +241,9 @@
               </div>
             <% else %>
               <% if current_user.id == contract.client_id %>
-                <%= link_to "Write Review for Freelancer", new_review_path(reviewee_id: contract.freelancer_id, project_id: contract.project_id), class: "btn btn-warning" %>
+                <div id="client-review-section-<%= contract.id %>" data-reviewee-id="<%= contract.freelancer_id %>" data-project-id="<%= contract.project_id %>" data-reviewer-id="<%= current_user.id %>">
+                  <!-- Review UI will be injected by JS -->
+                </div>
               <% end %>
             <% end %>
 
@@ -146,7 +256,9 @@
               </div>
             <% else %>
               <% if current_user.id == contract.freelancer_id %>
-                <%= link_to "Write Review for Client", new_review_path(reviewee_id: contract.client_id, project_id: contract.project_id), class: "btn btn-warning" %>
+                <div id="freelancer-review-section-<%= contract.id %>" data-reviewee-id="<%= contract.client_id %>" data-project-id="<%= contract.project_id %>" data-reviewer-id="<%= current_user.id %>">
+                  <!-- Review UI will be injected by JS -->
+                </div>
               <% else %>
                 <h6><i>Freelancer's review is not provided yet</i></h6>
               <% end %>
@@ -192,35 +304,4 @@
   </div>
 </div>
 
-<!-- 🔹 JS Scripts -->
-<script>
-  function openTab(evt, tabId) {
-    document.querySelectorAll(".tab-content").forEach(el => el.style.display = "none");
-    document.querySelectorAll(".tab-button").forEach(el => el.classList.remove("active"));
-    document.getElementById(tabId).style.display = "block";
-    evt.currentTarget.classList.add("active");
-  }
 
-  function toggleComments(id, button) {
-    const section = document.getElementById(id);
-    const isVisible = section.style.display === "block";
-    section.style.display = isVisible ? "none" : "block";
-    button.textContent = isVisible ? "▶" : "▼";
-  }
-
-  function toggleReplyForm(commentId) {
-    const replyForm = document.getElementById(`reply-form-${commentId}`);
-    replyForm.style.display = (replyForm.style.display === "none" || !replyForm.style.display) ? "block" : "none";
-  }
-
-  document.addEventListener("DOMContentLoaded", () => {
-    const alert = document.querySelector('.alert');
-    if (alert) {
-      setTimeout(() => {
-        alert.classList.remove("show");
-        alert.classList.add("fade");
-        alert.remove();
-      }, 3000);
-    }
-  });
-</script>

@@ -8,3 +8,6 @@ pin_all_from "app/javascript/controllers", under: "controllers"
 pin "bootstrap" # @5.3.7
 pin "@popperjs/core", to: "@popperjs--core.js" # @2.11.8
 pin "@rails/ujs", to: "rails-ujs.js"
+
+pin "enums", to: "enums.js"
+pin_all_from "app/javascript/modifiers", under: "modifiers"
