@@ -20,9 +20,21 @@ ActiveAdmin.register Review do
     actions
   end
 
-  filter :reviewer, collection: -> { User.all }
-  filter :reviewee, collection: -> { User.all }
-  filter :project
+  filter :reviewer_id,
+       as: :select,
+       label: "Reviewer",
+       collection: -> { User.pluck(:name, :id) }
+
+  filter :reviewee_id,
+       as: :select,
+       label: "Reviewee",
+       collection: -> { User.pluck(:name, :id) }
+
+  filter :project_id,
+       as: :select,
+       label: "Project",
+       collection: -> { Project.pluck(:title, :id) }
+
   filter :ratings
   filter :created_at
 

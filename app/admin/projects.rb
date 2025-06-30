@@ -18,8 +18,11 @@ ActiveAdmin.register Project do
     actions
   end
 
-  filter :title
-  filter :client, collection: -> { User.where(role: :client) }
+  filter :title_cont, as: :string, label: "Project Title Contains"
+  filter :client_id,
+       as: :select,
+       label: "Client",
+       collection: -> { User.where(role: :client).pluck(:name, :id) }
   filter :created_at
 
   form do |f|

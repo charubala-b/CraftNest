@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 class Users::SessionsController < Devise::SessionsController
-  # Called after user signs in
+  
   def after_sign_in_path_for(resource)
     resource.freelancer? ? freelancer_dashboard_path : client_dashboard_path
   end

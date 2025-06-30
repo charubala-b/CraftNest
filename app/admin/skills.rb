@@ -17,7 +17,7 @@ ActiveAdmin.register Skill do
     actions
   end
 
-  filter :name
+  filter :name, as: :string
   filter :created_at
 
   form do |f|

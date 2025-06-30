@@ -1,6 +1,5 @@
 class Users::RegistrationsController < Devise::RegistrationsController
   before_action :configure_sign_up_params, only: [:create]
-  # before_action :redirect_if_authenticated, only: [:new, :create]
   
   def after_sign_up_path_for(resource)
     if resource.freelancer?
@@ -10,6 +9,7 @@ class Users::RegistrationsController < Devise::RegistrationsController
     end
   end
   def create
+    flash.clear
     build_resource(sign_up_params.except(:skill_ids, :new_skills))
 
     if resource.save

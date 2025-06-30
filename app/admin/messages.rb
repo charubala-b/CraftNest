@@ -18,8 +18,15 @@ ActiveAdmin.register Message do
     actions
   end
 
-  filter :sender, collection: -> { User.all }
-  filter :receiver, collection: -> { User.all }
+filter :sender_id,
+       as: :select,
+       label: "Sender",
+       collection: -> { User.joins(:sent_messages).distinct.pluck(:name, :id) }
+
+filter :receiver_id,
+       as: :select,
+       label: "Receiver",
+       collection: -> { User.joins(:received_messages).distinct.pluck(:name, :id) }
   filter :created_at
 
   form do |f|
