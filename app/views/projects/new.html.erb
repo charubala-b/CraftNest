@@ -61,18 +61,6 @@
             </div>
           <% end %>
         <% end %>
-
-        <hr class="my-2">
-
-        <p class="fw-bold text-primary mt-2">Other Skills</p>
-        <% other_skills = @skills.reject { |s| default_skills.include?(s.skill_name.upcase) } %>
-        <% other_skills.each do |skill| %>
-          <div>
-            <%= check_box_tag "project[skill_ids][]", skill.id, @project.skill_ids.include?(skill.id), id: "skill_#{skill.id}", class: "form-check-input" %>
-            <%= label_tag "skill_#{skill.id}", skill.skill_name.humanize, class: "form-check-label" %>
-          </div>
-        <% end %>
-
       </div>
     </div>
 

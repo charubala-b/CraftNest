@@ -3,7 +3,7 @@ class MessagesController < ApplicationController
 
   def create
     @message = Message.new(message_params)
-    @message.sender_id = current_user.id  # Secure assignment
+    @message.sender_id = current_user.id
 
     if @message.save
       if current_user.client?

@@ -11,10 +11,9 @@ ActiveAdmin.register Bid do
   filter :project
   filter :accepted
   filter :created_at
-  filter :proposed_price
 
 
- filter :price_above_100, as: :boolean, label: "Price > 100?"
+  filter :price_above_100, as: :boolean, label: "Price > 100?"
 
 
   member_action :mark_accepted, method: :put do
