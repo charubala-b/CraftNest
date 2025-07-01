@@ -8,7 +8,6 @@ ActiveAdmin.register User do
 
   filter :email
   filter :name
-  filter :role, as: :select, collection: ['freelancer', 'client', 'admin']
 
   filter :created_year, as: :numeric, label: "Created Year"
   filter :created_month, as: :select, label: "Created Month", collection: 1..12
@@ -26,25 +25,6 @@ ActiveAdmin.register User do
     actions
   end
 
-  member_action :promote_to_admin, method: :post do
-    user = User.find(params[:id])
-
-    if AdminUser.exists?(email: user.email)
-      redirect_to admin_user_path(user), alert: "User is already an Admin."
-    else
-      AdminUser.create!(
-        email: user.email,
-        password: Devise.friendly_token[0, 20]
-      )
-      redirect_to admin_user_path(user), notice: "User successfully promoted to Admin."
-    end
-  end
-
-  action_item :promote_to_admin, only: :show do
-    unless AdminUser.exists?(email: resource.email)
-      link_to "Promote to Admin", promote_to_admin_admin_user_path(resource), method: :post
-    end
-  end
 
   collection_action :export_freelancers, method: :get do
     require 'csv'

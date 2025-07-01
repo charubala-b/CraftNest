@@ -1,5 +1,14 @@
 <%= stylesheet_link_tag "https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css", integrity: "sha384-...", crossorigin: "anonymous" %>
 
+<div id="flash-messages" class="position-fixed top-0 end-0 p-3" style="z-index: 1050;">
+  <% flash.each do |key, message| %>
+    <div class="alert alert-<%= key == "notice" ? "success" : "danger" %> alert-dismissible fade show" role="alert">
+      <%= message %>
+      <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+  <% end %>
+</div>
+
 <div class="container mt-5" style="max-width: 400px;">
   <h2 class="mb-4 text-center">🔐 Forgot your password?</h2>
 
@@ -20,3 +29,16 @@
     <%= render "devise/shared/links" %>
   </div>
 </div>
+
+<script>
+  document.addEventListener("DOMContentLoaded", () => {
+    const alert = document.querySelector('.alert');
+    if (alert) {
+      setTimeout(() => {
+        alert.classList.remove("show");
+        alert.classList.add("fade");
+        alert.remove();
+      }, 3000);
+    }
+  });
+</script>

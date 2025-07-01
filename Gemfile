@@ -20,6 +20,7 @@ gem "jbuilder"
 # gem "redis", ">= 4.0.1"
 # gem "devise"
 # Gemfile
+gem 'prawn'
 gem 'devise'
 gem 'activeadmin'
 gem 'sassc'

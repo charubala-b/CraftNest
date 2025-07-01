@@ -18,7 +18,7 @@ ActiveAdmin.register Project do
     actions
   end
 
-  filter :title_cont, as: :string, label: "Project Title Contains"
+  filter :title_i_cont, as: :string, label: "Project Title Contains"
   filter :client_id,
        as: :select,
        label: "Client",

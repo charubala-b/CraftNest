@@ -11,8 +11,7 @@ ActiveAdmin.register AdminUser do
     column :created_at
     actions
   end
-
-  filter :email_cont, as: :string, label: "Email Contains"
+  filter :email_i_cont, as: :string, label: "Email Contains"
   filter :created_at
 
   form do |f|
