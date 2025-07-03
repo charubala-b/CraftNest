@@ -20,12 +20,20 @@ gem "jbuilder"
 # gem "redis", ">= 4.0.1"
 # gem "devise"
 # Gemfile
+
+# gem for pdf download
 gem 'prawn'
+#gem for authentication
 gem 'devise'
+#gem for admin access
 gem 'activeadmin'
+#gem for css
 gem 'sassc'
+#sign in with google
 gem 'omniauth'
 gem 'omniauth-google-oauth2'
+#gem for api
+gem 'rabl'
 # Use Kredis to get higher-level data types in Redis [https://github.com/rails/kredis]
 # gem "kredis"
 

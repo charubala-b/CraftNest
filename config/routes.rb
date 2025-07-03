@@ -70,11 +70,25 @@ get '/test_google', to: redirect('/users/auth/google_oauth2')
 # newly added
 namespace :api do
   namespace :v1 do
-    resources :reviews, only: [:create] do
-      get ':project_id/:reviewer_id', to: 'reviews#show', on: :collection
+    resources :users, only: [:index, :show, :update, :destroy]
+    resources :projects do
+      resources :bids, only: [:index, :create]
+      resources :comments, only: [:index, :create]
     end
+    resources :bids, only: [:index, :update, :destroy, :show] do
+      post :accept, on: :member
+    end
+    resources :contracts, only: [:index, :show, :create, :update]
+    resources :messages, only: [:index, :create]
+    get 'reviews/:project_id/:reviewer_id', to: 'reviews#show'
+    post 'reviews', to: 'reviews#create'
+    resources :reviews, only: [:index, :create]
+    resources :skills, only: [:index, :create, :destroy]
+    resources :skill_assignments, only: [:create, :destroy]
+    resources :comments, only: [:update, :destroy, :show]
   end
 end
+
 
 
 
