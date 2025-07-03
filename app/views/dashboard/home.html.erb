@@ -1,5 +1,101 @@
+<meta name="current-user-id" content="<%= current_user.id %>">
+<meta name="csrf-token" content="<%= form_authenticity_token %>">
+
 <%= stylesheet_link_tag "dashboard", media: "all", "data-turbo-track": "reload" %>
-<!-- 🔹 JS Scripts -->
+
+<!-- Flash Messages -->
+<div id="flash-messages" class="position-fixed top-0 end-0 p-3" style="z-index: 1050;">
+  <% flash.each do |key, message| %>
+    <div class="alert alert-<%= key == "notice" ? "success" : "danger" %> alert-dismissible fade show" role="alert">
+      <%= message %>
+      <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+  <% end %>
+</div>
+
+<div class="dashboard-container">
+  <h1 class="dashboard-title">Client Dashboard</h1>
+
+  <!-- Tabs -->
+  <div class="dashboard-tabs">
+    <button class="tab-button active" onclick="openTab(event, 'projects')">Projects</button>
+    <button class="tab-button" onclick="openTab(event, 'contracts')">Contracts</button>
+    <button class="tab-button" onclick="openTab(event, 'messages')">Messages</button>
+    <button class="tab-button" onclick="openTab(event, 'completed_projects')">Completed Projects</button>
+  </div>
+
+  <!-- Projects Tab -->
+  <div id="projects" class="tab-content" style="display: block;">
+    <!-- your project content -->
+  </div>
+
+  <!-- Contracts Tab -->
+  <div id="contracts" class="tab-content">
+    <% @contracts.each do |contract| %>
+      <div class="contract-card">
+        <p><strong>Project:</strong> <%= contract.project.title %></p>
+        <p><strong>Freelancer:</strong> <%= contract.freelancer.name %></p>
+        <p><strong>Status:</strong> <%= contract.status.humanize %></p>
+
+        <% if contract.completed? %>
+          <div class="review-section">
+            <!-- Client Review -->
+            <h5>Client's Review for Freelancer</h5>
+            <% client_review = contract.project.reviews.find_by(reviewer_id: contract.client_id) %>
+            <% if client_review.present? %>
+              <div class="review-card">
+                <p>⭐ <%= client_review.ratings %> - <%= client_review.review %></p>
+                <p><em>by <%= contract.client.name %></em></p>
+              </div>
+            <% else %>
+              <% if current_user.id == contract.client_id %>
+                <div id="client-review-section-<%= contract.id %>" data-reviewee-id="<%= contract.freelancer_id %>" data-project-id="<%= contract.project_id %>" data-reviewer-id="<%= current_user.id %>"></div>
+              <% end %>
+            <% end %>
+
+            <!-- Freelancer Review -->
+            <h5>Freelancer's Review for Client</h5>
+            <% freelancer_review = contract.project.reviews.find_by(reviewer_id: contract.freelancer_id) %>
+            <% if freelancer_review.present? %>
+              <div class="review-card">
+                <p>⭐ <%= freelancer_review.ratings %> - <%= freelancer_review.review %></p>
+                <p><em>by <%= contract.freelancer.name %></em></p>
+              </div>
+            <% else %>
+              <% if current_user.id == contract.freelancer_id %>
+                <div id="freelancer-review-section-<%= contract.id %>" data-reviewee-id="<%= contract.client_id %>" data-project-id="<%= contract.project_id %>" data-reviewer-id="<%= current_user.id %>"></div>
+              <% end %>
+            <% end %>
+          </div>
+        <% else %>
+          <%= form_with url: contract_path(contract), method: :patch, local: true, data: { turbo: false } do |f| %>
+            <%= hidden_field_tag "contract[status]", "completed" %>
+            <%= f.submit "Mark Complete", class: "btn btn-warning", data: { confirm: "Are you sure?" } %>
+          <% end %>
+        <% end %>
+      </div>
+    <% end %>
+  </div>
+
+  <!-- Messages Tab -->
+  <div id="messages" class="tab-content">
+    <!-- your messages -->
+  </div>
+
+  <!-- Completed Projects Tab -->
+  <div id="completed_projects" class="tab-content">
+    <% @completed_projects.each do |project| %>
+      <div class="project-card completed-card">
+        <h3><%= project.title %></h3>
+        <p><%= project.description %></p>
+        <p><strong>Budget:</strong> ₹<%= project.budget %></p>
+        <p><strong>Deadline:</strong> <%= project.deadline.strftime("%d %b %Y") %></p>
+      </div>
+    <% end %>
+  </div>
+</div>
+
+<!-- JavaScript -->
 <script>
   function openTab(evt, tabId) {
     document.querySelectorAll(".tab-content").forEach(el => el.style.display = "none");
@@ -8,60 +104,47 @@
     evt.currentTarget.classList.add("active");
   }
 
-  function toggleComments(id, button) {
-    const section = document.getElementById(id);
-    const isVisible = section.style.display === "block";
-    section.style.display = isVisible ? "none" : "block";
-    button.textContent = isVisible ? "▶" : "▼";
-  }
-
-  function toggleReplyForm(commentId) {
-    const replyForm = document.getElementById(`reply-form-${commentId}`);
-    replyForm.style.display = (replyForm.style.display === "none" || !replyForm.style.display) ? "block" : "none";
-  }
-
   document.addEventListener("DOMContentLoaded", () => {
-    const alert = document.querySelector('.alert');
-    if (alert) {
-      setTimeout(() => {
-        alert.classList.remove("show");
-        alert.classList.add("fade");
-        alert.remove();
-      }, 3000);
-    }
-  });
+    const currentUserId = document.querySelector('meta[name="current-user-id"]').content;
+    const csrfToken = document.querySelector('meta[name="csrf-token"]').content;
 
-
-  document.addEventListener("DOMContentLoaded", () => {
     document.querySelectorAll("[id^='client-review-section-'], [id^='freelancer-review-section-']").forEach(section => {
       const projectId = section.dataset.projectId;
       const reviewerId = section.dataset.reviewerId;
       const revieweeId = section.dataset.revieweeId;
 
       fetch(`/api/v1/reviews/${projectId}/${reviewerId}`)
-        .then(res => res.json())
+        .then(res => res.json().catch(() => ({ message: "Invalid JSON" })))
         .then(data => {
-          if (data.id) {
+          if (data && data.id) {
             section.innerHTML = `
               <div class="review-card">
                 <p>⭐ ${data.ratings} - ${data.review}</p>
                 <p><em>by you</em></p>
               </div>
             `;
-          } else {
+          } else if (data.message === "Review not found") {
             section.innerHTML = `
               <form onsubmit="submitReview(event, ${projectId}, ${revieweeId})">
                 <label>Rating (1-5):</label>
                 <input type="number" name="ratings" min="1" max="5" required><br>
                 <label>Review:</label>
-                <textarea name="review" minlength="20" maxlength="100" required></textarea><br>
+                <textarea name="review" minlength="10" maxlength="100" required></textarea><br>
                 <button type="submit" class="btn btn-sm btn-warning">Submit Review</button>
               </form>
               <div class="review-message"></div>
             `;
+          } else {
+            section.innerHTML = `<p style="color:red;">Unable to load review or form.</p>`;
           }
         });
     });
+
+    // Flash message auto-close
+    const alert = document.querySelector('.alert');
+    if (alert) {
+      setTimeout(() => alert.remove(), 3000);
+    }
   });
 
   function submitReview(e, projectId, revieweeId) {
@@ -70,6 +153,8 @@
   const messageEl = form.nextElementSibling;
   const ratings = form.ratings.value;
   const reviewText = form.review.value;
+
+  form.querySelector("button").disabled = true;
 
   fetch('/api/v1/reviews', {
     method: 'POST',
@@ -86,222 +171,20 @@
       }
     })
   })
-  .then(res => res.json())
-  .then(data => {
-    if (data.errors) {
-      messageEl.innerHTML = `<p style="color:red;">${data.errors.join(', ')}</p>`;
-    } else {
-      // Re-fetch and display the newly created review
-      fetch(`/api/v1/reviews/${projectId}/${document.querySelector('meta[name="current-user-id"]').content}`)
-        .then(res => res.json())
-        .then(newData => {
-          if (newData.id) {
-            form.parentElement.innerHTML = `
-              <div class="review-card">
-                <p>⭐ ${newData.ratings} - ${newData.review}</p>
-                <p><em>by you</em></p>
-              </div>
-            `;
-          }
-        });
+  .then(res => {
+    if (!res.ok) {
+      return res.json().then(data => Promise.reject(data));
     }
+    return res.json(); // review created
+  })
+  .then(() => {
+    location.reload(); // ✅ reload page after success
+  })
+  .catch(err => {
+    const errorMessage = err.errors ? err.errors.join(', ') : err.message || 'Something went wrong';
+    messageEl.innerHTML = `<p style="color:red;">${errorMessage}</p>`;
+    form.querySelector("button").disabled = false;
   });
 }
 
-
 </script>
-<div id="flash-messages" class="position-fixed top-0 end-0 p-3" style="z-index: 1050;">
-  <% flash.each do |key, message| %>
-    <div class="alert alert-<%= key == "notice" ? "success" : "danger" %> alert-dismissible fade show" role="alert">
-      <%= message %>
-      <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-    </div>
-  <% end %>
-</div>
-
-<div class="dashboard-container">
-  <h1 class="dashboard-title">Client Dashboard</h1>
-
-  <!-- 🔹 Top Navigation Tabs -->
-  <div class="dashboard-tabs">
-    <button class="tab-button active" onclick="openTab(event, 'projects')">Projects</button>
-    <button class="tab-button" onclick="openTab(event, 'contracts')">Contracts</button>
-    <button class="tab-button" onclick="openTab(event, 'messages')">Messages</button>
-    <button class="tab-button" onclick="openTab(event, 'completed_projects')">Completed Projects</button>
-  </div>
-
-  <!-- 🔹 Projects Tab -->
-  <div id="projects" class="tab-content" style="display: block;">
-    <h2 class="section-title">My Projects</h2>
-    <%= link_to 'Post New Project', new_project_path, class: 'btn btn-primary' %>
-
-    <% if @active_projects.present? %>
-      <% @active_projects.ordered_by_deadline.each do |project| %>
-        <div class="project-card">
-          <h3><%= project.title %></h3>
-          <p><%= project.description %></p>
-          <p><strong>Budget:</strong> ₹<%= project.budget %></p>
-          <p><strong>Deadline:</strong> <%= project.deadline.strftime("%d %b %Y") %></p>
-          <p><strong>Required Skills:</strong>
-            <% if project.skills.any? %>
-              <%= project.skills.map { |s| s.skill_name.humanize }.join(', ') %>
-            <% else %>
-              <span class="text-muted">None</span>
-            <% end %>
-          </p>
-
-          <!-- Edit/Delete Project -->
-          <%= link_to 'Edit', edit_project_path(project), class: "btn btn-warn" %>
-          <%= button_to 'Delete', project_path(project), method: :delete, data: { confirm: 'Are you sure?' }, class: "btn btn-dan" %>
-
-          <!-- 🔹 Bids Section -->
-          <h4>Bids</h4>
-          <% if project.bids.any? %>
-            <% accepted_bid = project.bids.find_by(accepted: true) %>
-            <% project.bids.ordered_by_price_desc.each do |bid| %>
-              <div class="bid-card <%= 'accepted-card' if bid.accepted? %>">
-                <p><strong>Freelancer:</strong> <%= bid.user.name %></p>
-
-                <% if bid.user.skills.any? %>
-                  <p><strong>Skills:</strong> <%= bid.user.skills.map(&:skill_name).join(", ") %></p>
-                <% else %>
-                  <p><strong>Skills:</strong> <span class="text-muted">No skills listed</span></p>
-                <% end %>
-
-                <p><strong>cover_letter:</strong> <%= bid.cover_letter %></p>
-                <p><strong>₹:</strong> <%= bid.proposed_price %></p>
-
-                <% if bid.accepted? %>
-                  <button class="btn btn-secondary" disabled>Accepted</button>
-                <% elsif accepted_bid.present? %>
-                  <button class="btn btn-outline-secondary" disabled>Not Accepted</button>
-                <% else %>
-                  <%= button_to "Accept Bid", accept_bid_path(bid), method: :post, class: "btn btn-success", data: { confirm: "Accept this bid?" } %>
-                <% end %>
-              </div>
-            <% end %>
-          <% else %>
-            <p class="text-muted">No bids requested.</p>
-          <% end %>
-
-          <!-- 🔹 Comments Toggle -->
-          <button onclick="toggleComments('comments-<%= project.id %>', this)">▶</button> Show Comments
-
-          <!-- Comments Section -->
-          <div id="comments-<%= project.id %>" style="display: none; margin-top: 10px;">
-            <% if project.comments.any? %>
-              <% project.comments.where(parent_id: nil).each do |comment| %>
-                <div class="comment-block">
-                  <p><strong><%= comment.user.name %>:</strong> <%= comment.body %></p>
-                  <button onclick="toggleReplyForm(<%= comment.id %>)" class="btn btn-sm btn-light">Reply</button>
-                  <div id="reply-form-<%= comment.id %>" style="display: none; margin-top: 5px;">
-                    <%= form_with model: [project, Comment.new], local: true , data:{ turbo: false } do |f| %>
-                      <%= f.hidden_field :parent_id, value: comment.id %>
-                      <%= f.text_area :body, rows: 2, class: "form-control", placeholder: "Write your reply..." %>
-                      <%= f.submit "Post Reply", class: "btn btn-sm btn-primary mt-1" %>
-                    <% end %>
-                  </div>
-
-                  <% comment.replies.each do |reply| %>
-                    <div class="reply" style="margin-left: 20px; margin-top: 5px;">
-                      <p><strong><%= reply.user.name %> (reply):</strong> <em>@<%= comment.user.name %></em> - <%= reply.body %></p>
-                      <%= button_to 'Delete', comment_path(reply), method: :delete, data: { confirm: 'Are you sure?' }, class: "btn btn-sm btn-danger" %>
-                    </div>
-                  <% end %>
-
-                  <%= button_to 'Delete', comment_path(comment), method: :delete, data: { confirm: 'Are you sure?' }, class: "btn btn-sm btn-danger mt-1" %>
-                </div>
-              <% end %>
-            <% else %>
-              <p class="text-muted">No comments to reply.</p>
-            <% end %>
-          </div>
-        </div>
-      <% end %>
-    <% else %>
-      <p>No active projects.</p>
-    <% end %>
-  </div>
-
-  <!-- 🔹 Contracts Tab -->
-  <div id="contracts" class="tab-content">
-    <% @contracts.each do |contract| %>
-      <div class="contract-card">
-        <p><strong>Project:</strong> <%= contract.project.title %></p>
-        <p><strong>Freelancer:</strong> <%= contract.freelancer.name %></p>
-        <p><strong>Status:</strong> <%= contract.status.humanize %></p>
-        <% if contract.completed? %>
-          <div class="review-section">
-            <h5>Client's Review for Freelancer</h5>
-            <% client_review = contract.project.reviews.find_by(reviewer_id: contract.client_id) %>
-            <% if client_review.present? %>
-              <div class="review-card">
-                <p>⭐ <%= client_review.ratings %> - <%= client_review.review %></p>
-                <p><em>by <%= contract.client.name %></em></p>
-              </div>
-            <% else %>
-              <% if current_user.id == contract.client_id %>
-                <div id="client-review-section-<%= contract.id %>" data-reviewee-id="<%= contract.freelancer_id %>" data-project-id="<%= contract.project_id %>" data-reviewer-id="<%= current_user.id %>">
-                  <!-- Review UI will be injected by JS -->
-                </div>
-              <% end %>
-            <% end %>
-
-            <h5>Freelancer's Review for Client</h5>
-            <% freelancer_review = contract.project.reviews.find_by(reviewer_id: contract.freelancer_id) %>
-            <% if freelancer_review.present? %>
-              <div class="review-card">
-                <p>⭐ <%= freelancer_review.ratings %> - <%= freelancer_review.review %></p>
-                <p><em>by <%= contract.freelancer.name %></em></p>
-              </div>
-            <% else %>
-              <% if current_user.id == contract.freelancer_id %>
-                <div id="freelancer-review-section-<%= contract.id %>" data-reviewee-id="<%= contract.client_id %>" data-project-id="<%= contract.project_id %>" data-reviewer-id="<%= current_user.id %>">
-                  <!-- Review UI will be injected by JS -->
-                </div>
-              <% else %>
-                <h6><i>Freelancer's review is not provided yet</i></h6>
-              <% end %>
-            <% end %>
-          </div>
-        <% else %>
-          <%= form_with url: contract_path(contract), method: :patch, local: true , data: { turbo: false } do |f| %>
-            <%= hidden_field_tag "contract[status]", "completed" %>
-            <%= f.submit "Mark Complete", class: "btn btn-warning", data: { confirm: "Are you sure?" } %>
-          <% end %>
-        <% end %>
-      </div>
-    <% end %>
-  </div>
-
-  <!-- 🔹 Messages Tab -->
-  <div id="messages" class="tab-content">
-    <div class="chat-list">
-      <% @contracts.each do |contract| %>
-        <% if contract.client_id == current_user.id %>
-          <div class="chat-link-card">
-            <%= link_to chat_room_path(contract.freelancer_id, contract.project_id), class: "chat-link-button" do %>
-              💬 <strong><%= contract.freelancer.name %></strong> on <em><%= contract.project.title %></em>
-            <% end %>
-          </div>
-        <% end %>
-      <% end %>
-    </div>
-  </div>
-
-  <!-- 🔹 Completed Projects Tab -->
-  <div id="completed_projects" class="tab-content">
-    <h2 class="section-title">Completed Projects</h2>
-
-    <% @completed_projects.each do |project| %>
-      <div class="project-card completed-card">
-        <h3><%= project.title %></h3>
-        <p><%= project.description %></p>
-        <p><strong>Budget:</strong> ₹<%= project.budget %></p>
-        <p><strong>Deadline:</strong> <%= project.deadline.strftime("%d %b %Y") %></p>
-      </div>
-    <% end %>
-  </div>
-</div>
-
-
