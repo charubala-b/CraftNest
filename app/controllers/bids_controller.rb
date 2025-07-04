@@ -42,14 +42,21 @@ class BidsController < ApplicationController
     end
   end
 
-  def destroy
-    if @bid.accepted?
-      redirect_to freelancer_dashboard_path, alert: "You can't delete an accepted bid."
+def destroy
+  if current_user.freelancer?
+    if @bid.user_id != current_user.id
+      render json: { error: "Unauthorized action." }, status: :unauthorized
+    elsif @bid.accepted?
+      render json: { error: "You can't delete an accepted bid." }, status: :forbidden
     else
       @bid.destroy
-      redirect_to freelancer_dashboard_path, notice: "Bid deleted successfully."
+      render json: { message: "Bid deleted successfully." }, status: :ok
     end
+  else
+    render json: { error: "Only freelancers can delete bids." }, status: :forbidden
   end
+end
+
 
   private
 

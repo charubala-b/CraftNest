@@ -1,14 +1,34 @@
 class Api::V1::CommentsController < Api::V1::BaseController
-  protect_from_forgery with: :null_session
-  skip_before_action :verify_authenticity_token
-  before_action :set_project, only: [:create]
+  before_action :set_project, only: [:index, :create]
   before_action :set_comment, only: [:show, :update, :destroy]
 
-  def show
-    render :show
+  # GET /api/v1/projects/:project_id/comments
+  def index
+    if current_user.client?
+      if @project.client_id != current_user.id
+        return render json: { error: 'Forbidden: You can only view comments on your own projects.' }, status: :forbidden
+      end
+    end
+
+    @comments = @project.comments.includes(:user)
+    render :index
   end
 
+  # GET /api/v1/comments/:id
+  def show
+    if current_user.client? && @comment.project.client_id != current_user.id
+      render json: { error: 'Forbidden: You can only view comments on your own projects.' }, status: :forbidden
+    else
+      render :show
+    end
+  end
+
+  # POST /api/v1/projects/:project_id/comments
   def create
+    if current_user.client? && @project.client_id != current_user.id
+      return render json: { error: 'Forbidden: Clients can only comment on their own projects.' }, status: :forbidden
+    end
+
     @comment = @project.comments.build(comment_params)
     @comment.user = current_user
 
@@ -19,9 +39,10 @@ class Api::V1::CommentsController < Api::V1::BaseController
     end
   end
 
+  # PATCH/PUT /api/v1/comments/:id
   def update
     if @comment.user != current_user
-      render json: { error: 'Unauthorized' }, status: :unauthorized
+      render json: { error: 'Unauthorized: You can only edit your own comments.' }, status: :unauthorized
     elsif @comment.update(comment_params)
       render :show
     else
@@ -29,12 +50,19 @@ class Api::V1::CommentsController < Api::V1::BaseController
     end
   end
 
+  # DELETE /api/v1/comments/:id
   def destroy
-    if can_delete_comment?
-      @comment.destroy
-      render json: { message: 'Comment deleted' }, status: :ok
+    if current_user.client?
+      if @comment.project.client_id == current_user.id
+        @comment.destroy
+        head :no_content
+      else
+        render json: { error: 'Forbidden: You can only delete comments on your own projects.' }, status: :forbidden
+      end
+    elsif current_user.freelancer?
+      render json: { error: 'Forbidden: Freelancers cannot delete comments.' }, status: :forbidden
     else
-      render json: { error: 'You are not authorized to delete this comment.' }, status: :unauthorized
+      render json: { error: 'Unauthorized user.' }, status: :unauthorized
     end
   end
 
@@ -42,22 +70,15 @@ class Api::V1::CommentsController < Api::V1::BaseController
 
   def set_project
     @project = Project.find_by(id: params[:project_id])
-    render json: { error: 'Project not found' }, status: :not_found unless @project
+    render json: { error: 'Project not found.' }, status: :not_found unless @project
   end
 
   def set_comment
     @comment = Comment.find_by(id: params[:id])
-    render json: { error: 'Comment not found' }, status: :not_found unless @comment
+    render json: { error: 'Comment not found.' }, status: :not_found unless @comment
   end
 
   def comment_params
     params.require(:comment).permit(:body, :parent_id)
-  end
-
-  def can_delete_comment?
-    # Author can delete OR client who owns the project can delete any comment
-    @comment.user == current_user || (
-      current_user.client? && @comment.project.client_id == current_user.id
-    )
   end
 end

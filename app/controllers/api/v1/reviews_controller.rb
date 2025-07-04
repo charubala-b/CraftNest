@@ -1,9 +1,13 @@
 class Api::V1::ReviewsController < Api::V1::BaseController
-  protect_from_forgery with: :null_session
-  skip_before_action :verify_authenticity_token
+  before_action :set_project
   before_action :set_review, only: [:show]
 
+  # GET /api/v1/reviews?project_id=xx
   def show
+    unless authorized_to_view_review?(@project)
+      return render json: { error: "Forbidden: You cannot view this review." }, status: :forbidden
+    end
+
     if @review
       render :show, formats: :json, status: :ok
     else
@@ -11,18 +15,17 @@ class Api::V1::ReviewsController < Api::V1::BaseController
     end
   end
 
+  # POST /api/v1/reviews
   def create
-    reviewer_id = current_user.id
-    project_id = review_params[:project_id]
-
-    existing_review = Review.find_by(project_id: project_id, reviewer_id: reviewer_id)
-
-    if existing_review
-      render json: { message: "You have already submitted a review for this project." }, status: :unprocessable_entity
-      return
+    unless authorized_to_create_review?(@project)
+      return render json: { error: "Forbidden: You are not allowed to review this project." }, status: :forbidden
     end
 
-    @review = Review.new(review_params.merge(reviewer_id: reviewer_id))
+    if Review.exists?(project_id: @project.id, reviewer_id: current_user.id)
+      return render json: { message: "You have already submitted a review for this project." }, status: :unprocessable_entity
+    end
+
+    @review = Review.new(review_params.merge(reviewer_id: current_user.id))
 
     if @review.save
       render :show, formats: :json, status: :created
@@ -33,11 +36,34 @@ class Api::V1::ReviewsController < Api::V1::BaseController
 
   private
 
+  def set_project
+    project_id = params[:project_id] || params.dig(:review, :project_id)
+    @project = Project.find_by(id: project_id)
+    render json: { error: "Project not found." }, status: :not_found unless @project
+  end
+
+
   def set_review
-    @review = Review.find_by(project_id: params[:project_id], reviewer_id: params[:reviewer_id])
+    @review = Review.find_by(project_id: @project.id, reviewer_id: current_user.id)
   end
 
   def review_params
+    # fallback if review param not present or malformed
     params.require(:review).permit(:ratings, :review, :project_id, :reviewee_id)
+  end
+
+
+  def authorized_to_view_review?(project)
+    if current_user.client?
+      project.client_id == current_user.id
+    elsif current_user.freelancer?
+      Contract.exists?(project_id: project.id, freelancer_id: current_user.id)
+    else
+      false
+    end
+  end
+
+  def authorized_to_create_review?(project)
+    authorized_to_view_review?(project) # same logic
   end
 end
