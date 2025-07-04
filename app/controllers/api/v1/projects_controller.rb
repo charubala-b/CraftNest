@@ -1,16 +1,31 @@
 class Api::V1::ProjectsController < Api::V1::BaseController
-  before_action :require_client!
   before_action :set_project, only: [:show, :update, :destroy]
+  before_action :authorize_client_user!, only: [:create, :update, :destroy]
 
+  # GET /api/v1/projects
   def index
-    @projects = current_user.projects.includes(:skills)
+    if current_user&.client?
+      @projects = current_user.projects.includes(:skills)
+    elsif current_user&.freelancer?
+      @projects = Project.includes(:skills).all
+    elsif current_application
+      @projects = Project.includes(:skills).all
+    else
+      @projects = []
+    end
     render :index
   end
 
+  # GET /api/v1/projects/:id
   def show
-    render :show
+    if current_user&.client? && @project.client_id != current_user.id
+      render json: { error: "Unauthorized access." }, status: :unauthorized
+    else
+      render :show
+    end
   end
 
+  # POST /api/v1/projects
   def create
     @project = current_user.projects.build(project_params.except(:skill_ids, :new_skills))
 
@@ -28,7 +43,12 @@ class Api::V1::ProjectsController < Api::V1::BaseController
     end
   end
 
+  # PATCH/PUT /api/v1/projects/:id
   def update
+    if current_user&.id != @project.client_id
+      return render json: { error: "Unauthorized action." }, status: :unauthorized
+    end
+
     if project_params[:budget].to_f < 0
       return render json: { error: "Budget cannot be negative." }, status: :unprocessable_entity
     end
@@ -43,15 +63,20 @@ class Api::V1::ProjectsController < Api::V1::BaseController
     end
   end
 
+  # DELETE /api/v1/projects/:id
   def destroy
-    @project.destroy
-    render json: { message: "Project deleted successfully." }, status: :ok
+    if current_user&.id != @project.client_id
+      render json: { error: "Unauthorized action." }, status: :unauthorized
+    else
+      @project.destroy
+      head :no_content
+    end
   end
 
   private
 
   def set_project
-    @project = current_user.projects.find_by(id: params[:id])
+    @project = Project.find_by(id: params[:id])
     render json: { error: "Project not found." }, status: :not_found unless @project
   end
 
@@ -59,9 +84,10 @@ class Api::V1::ProjectsController < Api::V1::BaseController
     params.require(:project).permit(:title, :description, :budget, :deadline, :new_skills, skill_ids: [])
   end
 
-  def require_client!
+  # Only allow actual user clients to create/update/destroy
+  def authorize_client_user!
     unless current_user&.client?
-      render json: { error: "Only clients can manage projects." }, status: :unauthorized
+      render json: { error: "Only client users can manage projects." }, status: :forbidden
     end
   end
 

@@ -1,4 +1,5 @@
 Rails.application.routes.draw do
+  use_doorkeeper
   devise_for :users, controllers: { sessions: 'users/sessions',registrations: 'users/registrations', passwords: 'users/passwords'}
   devise_scope :user do
     get '/users/auth/:provider', to: 'users/omniauth_callbacks#passthru', as: :user_omniauth_authorize
@@ -70,24 +71,24 @@ get '/test_google', to: redirect('/users/auth/google_oauth2')
 # newly added
 namespace :api do
   namespace :v1 do
-    resources :users, only: [:index, :show, :update, :destroy]
     resources :projects do
       resources :bids, only: [:index, :create]
       resources :comments, only: [:index, :create]
     end
+
     resources :bids, only: [:index, :update, :destroy, :show] do
       post :accept, on: :member
     end
+    get 'contracts/completed', to: 'contracts#completed'
     resources :contracts, only: [:index, :show, :create, :update]
-    resources :messages, only: [:index, :create]
-    get 'reviews/:project_id/:reviewer_id', to: 'reviews#show'
-    post 'reviews', to: 'reviews#create'
+
     resources :reviews, only: [:index, :create]
-    resources :skills, only: [:index, :create, :destroy]
-    resources :skill_assignments, only: [:create, :destroy]
+    get 'reviews/:project_id', to: 'reviews#show'  # uses project_id & current_user context
+
     resources :comments, only: [:update, :destroy, :show]
   end
 end
+
 
 
 

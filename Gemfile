@@ -34,6 +34,9 @@ gem 'omniauth'
 gem 'omniauth-google-oauth2'
 #gem for api
 gem 'rabl'
+
+#gem for api authentication
+gem 'doorkeeper'
 # Use Kredis to get higher-level data types in Redis [https://github.com/rails/kredis]
 # gem "kredis"
 
