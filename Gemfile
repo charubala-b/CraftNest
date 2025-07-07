@@ -37,6 +37,15 @@ gem 'rabl'
 
 #gem for api authentication
 gem 'doorkeeper'
+
+#gem for authentication
+group :development, :test do
+  gem 'rspec-rails'
+  gem 'factory_bot_rails'
+  gem 'simplecov', require: false
+  gem 'faker'
+end
+
 # Use Kredis to get higher-level data types in Redis [https://github.com/rails/kredis]
 # gem "kredis"
 

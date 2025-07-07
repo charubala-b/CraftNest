@@ -2,7 +2,8 @@ class Bid < ApplicationRecord
   include Ransackable
   scope :accepted, -> { where(accepted: true) }
   scope :pending, -> { where(accepted: [false, nil]) }
-  scope :ordered_by_price_desc, -> { order(proposed_price: :asc) }
+  scope :ordered_by_price_asc, -> { order(proposed_price: :asc) }
+  
 
   after_update :create_contract_if_accepted
 
