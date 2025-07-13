@@ -7,7 +7,7 @@ class User < ApplicationRecord
 
   before_save :downcase_email
 
-  enum role: { freelancer: 0, client: 1 }
+  enum :role, { freelancer: 0, client: 1 }
 
   validates :email, presence: true,
                     uniqueness: { case_sensitive: false, message: "is already registered" }

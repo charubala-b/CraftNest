@@ -5,9 +5,7 @@ RSpec.describe Message, type: :model do
   let(:receiver) { create(:user) }
   let(:project)  { create(:project) }
 
-  subject do
-    build(:message, sender: sender, receiver: receiver, project: project)
-  end
+  subject { build(:message, sender: sender, receiver: receiver, project: project) }
 
   describe "associations" do
     it "belongs to sender" do
@@ -28,29 +26,49 @@ RSpec.describe Message, type: :model do
       expect(subject).to be_valid
     end
 
-    it "is invalid without body" do
-      subject.body = ""
-      subject.validate
-      expect(subject.errors[:body]).to include("can't be blank")
+    context "when body is missing" do
+      before { subject.body = "" }
+
+      it "is invalid" do
+        subject.validate
+        expect(subject.errors[:body]).to include("can't be blank")
+      end
     end
 
-    it "is invalid if body is too short" do
-      subject.body = "A"
-      subject.validate
-      expect(subject.errors[:body]).to include("is too short (minimum is 2 characters)")
+    context "when body is too short" do
+      before { subject.body = "A" }
+
+      it "is invalid" do
+        subject.validate
+        expect(subject.errors[:body]).to include("is too short (minimum is 2 characters)")
+      end
     end
 
-    it "is invalid if body is too long" do
-      subject.body = "A" * 101
-      subject.validate
-      expect(subject.errors[:body]).to include("is too long (maximum is 100 characters)")
+    context "when body is too long" do
+      before { subject.body = "A" * 101 }
+
+      it "is invalid" do
+        subject.validate
+        expect(subject.errors[:body]).to include("is too long (maximum is 100 characters)")
+      end
     end
   end
 
-  describe "callbacks" do
-    it "runs notify_receiver callback after create" do
-      message = create(:message, sender: sender, receiver: receiver, project: project)
-      expect(message).to be_persisted
+    describe "callbacks" do
+    context "after create" do
+      it "calls notify_receiver" do
+        expect_any_instance_of(Message).to receive(:notify_receiver)
+        create(:message, sender: sender, receiver: receiver, project: project)
+      end
+
+      it "logs notification info" do
+        logger_double = double("Logger")
+        allow(Rails).to receive(:logger).and_return(logger_double)
+        expect(logger_double).to receive(:info).with(/Notified User ##{receiver.id} about new message #\d+/)
+
+        create(:message, sender: sender, receiver: receiver, project: project)
+      end
     end
   end
+
 end

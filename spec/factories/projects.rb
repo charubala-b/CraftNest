@@ -1,10 +1,9 @@
 FactoryBot.define do
-    factory :project do
-        sequence(:title) { |n| "Unique Project Title is Title #{n}" }
-        description { "The dashboard for getting job through online" }
-        budget { "1000" }
-        deadline { 2.weeks.from_now }
-        association :client, factory: :user
-    end
+  factory :project do
+    sequence(:title) { |n| "Valid Project Title #{n} #{SecureRandom.hex(2)}" }
+    description { "A valid description for the project." }
+    budget { 1000 }
+    deadline { 7.days.from_now }
+    association :client, factory: :user
+  end
 end
-

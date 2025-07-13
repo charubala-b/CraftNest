@@ -2,7 +2,6 @@ class Api::V1::CommentsController < Api::V1::BaseController
   before_action :set_project, only: [:index, :create]
   before_action :set_comment, only: [:show, :update, :destroy]
 
-  # GET /api/v1/projects/:project_id/comments
   def index
     if current_user.client?
       if @project.client_id != current_user.id
@@ -14,7 +13,6 @@ class Api::V1::CommentsController < Api::V1::BaseController
     render :index
   end
 
-  # GET /api/v1/comments/:id
   def show
     if current_user.client? && @comment.project.client_id != current_user.id
       render json: { error: 'Forbidden: You can only view comments on your own projects.' }, status: :forbidden
@@ -23,7 +21,6 @@ class Api::V1::CommentsController < Api::V1::BaseController
     end
   end
 
-  # POST /api/v1/projects/:project_id/comments
   def create
     if current_user.client? && @project.client_id != current_user.id
       return render json: { error: 'Forbidden: Clients can only comment on their own projects.' }, status: :forbidden
@@ -39,7 +36,6 @@ class Api::V1::CommentsController < Api::V1::BaseController
     end
   end
 
-  # PATCH/PUT /api/v1/comments/:id
   def update
     if @comment.user != current_user
       render json: { error: 'Unauthorized: You can only edit your own comments.' }, status: :unauthorized
@@ -50,7 +46,6 @@ class Api::V1::CommentsController < Api::V1::BaseController
     end
   end
 
-  # DELETE /api/v1/comments/:id
   def destroy
     if current_user.client?
       if @comment.project.client_id == current_user.id
