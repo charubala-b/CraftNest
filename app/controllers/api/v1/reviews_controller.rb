@@ -2,7 +2,6 @@ class Api::V1::ReviewsController < Api::V1::BaseController
   before_action :set_project
   before_action :set_review, only: [:show]
 
-  # GET /api/v1/reviews?project_id=xx
   def show
     unless authorized_to_view_review?(@project)
       return render json: { error: "Forbidden: You cannot view this review." }, status: :forbidden
@@ -15,8 +14,8 @@ class Api::V1::ReviewsController < Api::V1::BaseController
     end
   end
 
-  # POST /api/v1/reviews
   def create
+    
     unless authorized_to_create_review?(@project)
       return render json: { error: "Forbidden: You are not allowed to review this project." }, status: :forbidden
     end
@@ -44,11 +43,11 @@ class Api::V1::ReviewsController < Api::V1::BaseController
 
 
   def set_review
-    @review = Review.find_by(project_id: @project.id, reviewer_id: current_user.id)
+    @review = Review.find_by(project_id: @project.id)
   end
 
+
   def review_params
-    # fallback if review param not present or malformed
     params.require(:review).permit(:ratings, :review, :project_id, :reviewee_id)
   end
 
@@ -64,6 +63,6 @@ class Api::V1::ReviewsController < Api::V1::BaseController
   end
 
   def authorized_to_create_review?(project)
-    authorized_to_view_review?(project) # same logic
+    authorized_to_view_review?(project)
   end
 end

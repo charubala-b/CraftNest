@@ -1,9 +1,10 @@
 class Api::V1::ContractsController < Api::V1::BaseController
+  rescue_from ActionController::ParameterMissing, with: :handle_parameter_missing
+
   before_action :set_contract, only: [:show, :update]
   before_action :authorize_client!, only: [:create, :update]
   before_action :authorize_access_to_contract!, only: [:show]
 
-  # GET /api/v1/contracts
   def index
     if current_user.client?
       @contracts = Contract.where(client_id: current_user.id).includes(:project, :freelancer, :client)
@@ -15,12 +16,10 @@ class Api::V1::ContractsController < Api::V1::BaseController
     render :index
   end
 
-  # GET /api/v1/contracts/:id
   def show
     render :show
   end
 
-  # POST /api/v1/contracts
   def create
     @contract = Contract.new(contract_params.merge(client_id: current_user.id, status: :active))
 
@@ -31,7 +30,6 @@ class Api::V1::ContractsController < Api::V1::BaseController
     end
   end
 
-  # PUT/PATCH /api/v1/contracts/:id
   def update
     unless @contract.status == 'active'
       return render json: { error: "Only active contracts can be updated." }, status: :forbidden
@@ -41,10 +39,12 @@ class Api::V1::ContractsController < Api::V1::BaseController
       return render json: { error: "Unauthorized to update this contract." }, status: :unauthorized
     end
 
-    if @contract.update(contract_params)
-      render :show, status: :ok
-    else
-      render json: { errors: @contract.errors.full_messages }, status: :unprocessable_entity
+    begin
+      if @contract.update(contract_params)
+        render :show, status: :ok
+      end
+    rescue ArgumentError => e
+      render json: { errors: [e.message] }, status: :unprocessable_entity
     end
   end
 
@@ -61,6 +61,7 @@ class Api::V1::ContractsController < Api::V1::BaseController
 
     render :completed
   end
+
   private
 
   def set_contract
@@ -82,5 +83,9 @@ class Api::V1::ContractsController < Api::V1::BaseController
     return if @contract.client_id == current_user.id || @contract.freelancer_id == current_user.id
 
     render json: { error: "You are not authorized to view this contract." }, status: :unauthorized
+  end
+
+  def handle_parameter_missing(exception)
+    render json: { error: exception.message }, status: :bad_request
   end
 end

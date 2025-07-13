@@ -142,18 +142,24 @@
             <% end %>
 
             <!-- Freelancer Review -->
-            <h5>Freelancer's Review for Client</h5>
-            <% freelancer_review = contract.project.reviews.find_by(reviewer_id: contract.freelancer_id) %>
-            <% if freelancer_review.present? %>
-              <div class="review-card">
-                <p>⭐ <%= freelancer_review.ratings %> - <%= freelancer_review.review %></p>
-                <p><em>by <%= contract.freelancer.name %></em></p>
-              </div>
-            <% else %>
-              <% if current_user.id == contract.freelancer_id %>
-                <div id="freelancer-review-section-<%= contract.id %>" data-reviewee-id="<%= contract.client_id %>" data-project-id="<%= contract.project_id %>" data-reviewer-id="<%= current_user.id %>"></div>
-              <% end %>
-            <% end %>
+<h5>Freelancer's Review for Client</h5>
+<% freelancer_review = contract.project.reviews.find_by(reviewer_id: contract.freelancer_id) %>
+<% if freelancer_review.present? %>
+  <div class="review-card">
+    <p>⭐ <%= freelancer_review.ratings %> - <%= freelancer_review.review %></p>
+    <p><em>by <%= contract.freelancer.name %></em></p>
+  </div>
+<% else %>
+  <% if current_user.id == contract.freelancer_id %>
+    <div id="freelancer-review-section-<%= contract.id %>" 
+         data-reviewee-id="<%= contract.client_id %>" 
+         data-project-id="<%= contract.project_id %>" 
+         data-reviewer-id="<%= current_user.id %>"></div>
+  <% else %>
+    <p>No review has been given yet.</p>
+  <% end %>
+<% end %>
+
           </div>
         <% else %>
           <%= form_with url: contract_path(contract), method: :patch, local: true, data: { turbo: false } do |f| %>
@@ -207,39 +213,48 @@
     const currentUserId = document.querySelector('meta[name="current-user-id"]').content;
     const csrfToken = document.querySelector('meta[name="csrf-token"]').content;
 
+    if (!localStorage.getItem("access_token")) {
+      localStorage.setItem("access_token", "hnvA7SMBcx-pFqH1fuNXOCrH4QEIYDeWksbuJ0CV7-E");
+    }
+
     document.querySelectorAll("[id^='client-review-section-'], [id^='freelancer-review-section-']").forEach(section => {
       const projectId = section.dataset.projectId;
       const reviewerId = section.dataset.reviewerId;
       const revieweeId = section.dataset.revieweeId;
 
-      fetch(`/api/v1/reviews/${projectId}`)
-        .then(res => res.json().catch(() => ({ message: "Invalid JSON" })))
-        .then(data => {
-          if (data && data.id) {
-            section.innerHTML = `
-              <div class="review-card">
-                <p>⭐ ${data.ratings} - ${data.review}</p>
-                <p><em>by you</em></p>
-              </div>
-            `;
-          } else if (data.message === "Review not found") {
-            section.innerHTML = `
-              <form onsubmit="submitReview(event, ${projectId})">
-                <label>Rating (1-5):</label>
-                <input type="number" name="ratings" min="1" max="5" required><br>
-                <label>Review:</label>
-                <textarea name="review" minlength="10" maxlength="100" required></textarea><br>
-                <button type="submit" class="btn btn-sm btn-warning">Submit Review</button>
-              </form>
-              <div class="review-message"></div>
-            `;
-          } else {
-            section.innerHTML = `<p style="color:red;">Unable to load review or form.</p>`;
-          }
-        });
+      fetch(`/api/v1/reviews/${projectId}`, {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('access_token')}`,
+          'Content-Type': 'application/json'
+        }
+      })
+      .then(res => res.json().catch(() => ({ message: "Invalid JSON" })))
+      .then(data => {
+        if (data && data.id) {
+          section.innerHTML = `
+            <div class="review-card">
+              <p>⭐ ${data.ratings} - ${data.review}</p>
+              <p><em>by you</em></p>
+            </div>
+          `;
+        } else if (data.message === "Review not found") {
+          section.innerHTML = `
+            <form onsubmit="submitReview(event, ${projectId}, ${revieweeId})">
+              <label>Rating (1-5):</label>
+              <input type="number" name="ratings" min="1" max="5" required><br>
+              <label>Review:</label>
+              <textarea name="review" minlength="10" maxlength="100" required></textarea><br>
+              <button type="submit" class="btn btn-sm btn-warning">Submit Review</button>
+            </form>
+            <div class="review-message"></div>
+          `;
+        } else {
+          section.innerHTML = `<p style="color:red;">Unable to load review or form.</p>`;
+        }
+      });
     });
 
-    // Flash message auto-close
     const alert = document.querySelector('.alert');
     if (alert) {
       setTimeout(() => alert.remove(), 3000);
@@ -247,43 +262,43 @@
   });
 
   function submitReview(e, projectId, revieweeId) {
-  e.preventDefault();
-  const form = e.target;
-  const messageEl = form.nextElementSibling;
-  const ratings = form.ratings.value;
-  const reviewText = form.review.value;
+    e.preventDefault();
+    const form = e.target;
+    const messageEl = form.nextElementSibling;
+    const ratings = form.ratings.value;
+    const reviewText = form.review.value;
 
-  form.querySelector("button").disabled = true;
+    form.querySelector("button").disabled = true;
 
-  fetch('/api/v1/reviews', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'X-CSRF-Token': document.querySelector('meta[name="csrf-token"]').content
-    },
-    body: JSON.stringify({
-      review: {
-        ratings: ratings,
-        review: reviewText,
-        project_id: projectId,
-        reviewee_id: revieweeId
-      }
+    fetch('/api/v1/reviews', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-CSRF-Token': document.querySelector('meta[name="csrf-token"]').content,
+        'Authorization': `Bearer ${localStorage.getItem('access_token')}`
+      },
+      body: JSON.stringify({
+        review: {
+          ratings: ratings,
+          review: reviewText,
+          project_id: projectId,
+          reviewee_id: revieweeId
+        }
+      })
     })
-  })
-  .then(res => {
-    if (!res.ok) {
-      return res.json().then(data => Promise.reject(data));
-    }
-    return res.json(); // review created
-  })
-  .then(() => {
-    location.reload(); // ✅ reload after success
-  })
-  .catch(err => {
-    const errorMessage = err.errors ? err.errors.join(', ') : err.message || 'Something went wrong';
-    messageEl.innerHTML = `<p style="color:red;">${errorMessage}</p>`;
-    form.querySelector("button").disabled = false;
-  });
-}
-
+    .then(res => {
+      if (!res.ok) {
+        return res.json().then(data => Promise.reject(data));
+      }
+      return res.json(); 
+    })
+    .then(() => {
+      location.reload();
+    })
+    .catch(err => {
+      const errorMessage = err.errors ? err.errors.join(', ') : err.message || 'Something went wrong';
+      messageEl.innerHTML = `<p style="color:red;">${errorMessage}</p>`;
+      form.querySelector("button").disabled = false;
+    });
+  }
 </script>

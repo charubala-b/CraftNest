@@ -44,7 +44,9 @@ group :development, :test do
   gem 'factory_bot_rails'
   gem 'simplecov', require: false
   gem 'faker'
+  gem 'byebug'
 end
+
 
 # Use Kredis to get higher-level data types in Redis [https://github.com/rails/kredis]
 # gem "kredis"

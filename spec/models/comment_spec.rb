@@ -5,9 +5,7 @@ RSpec.describe Comment, type: :model do
   let(:client)  { create(:user, role: :client) }
   let(:project) { create(:project, client: client) }
 
-  subject do
-    build(:comment, user: user, project: project)
-  end
+  subject { build(:comment, user: user, project: project) }
 
   describe "associations" do
     it "belongs to user" do
@@ -18,18 +16,23 @@ RSpec.describe Comment, type: :model do
       expect(subject.project).to eq(project)
     end
 
-    it "can belong to a parent comment" do
-      parent = create(:comment, user: user, project: project)
-      comment = build(:comment, parent: parent, user: user, project: project)
-      expect(comment.parent).to eq(parent)
+    context "when comment has a parent" do
+      let!(:parent) { create(:comment, user: user, project: project) }
+      let!(:child)  { build(:comment, parent: parent, user: user, project: project) }
+
+      it "can belong to a parent comment" do
+        expect(child.parent).to eq(parent)
+      end
     end
 
-    it "can have replies" do
-      parent = create(:comment, user: user, project: project)
-      reply1 = create(:comment, parent: parent, user: user, project: project)
-      reply2 = create(:comment, parent: parent, user: user, project: project)
+    context "when comment has replies" do
+      let!(:parent) { create(:comment, user: user, project: project) }
+      let!(:reply1) { create(:comment, parent: parent, user: user, project: project) }
+      let!(:reply2) { create(:comment, parent: parent, user: user, project: project) }
 
-      expect(parent.replies).to include(reply1, reply2)
+      it "has many replies" do
+        expect(parent.replies).to include(reply1, reply2)
+      end
     end
   end
 
@@ -38,36 +41,51 @@ RSpec.describe Comment, type: :model do
       expect(subject).to be_valid
     end
 
-    it "is invalid without body" do
-      subject.body = ""
-      subject.validate
-      expect(subject.errors[:body]).to include("can't be blank")
+    context "when body is missing" do
+      before { subject.body = "" }
+
+      it "is invalid without body" do
+        subject.validate
+        expect(subject.errors[:body]).to include("can't be blank")
+      end
     end
 
-    it "is invalid if body is too short" do
-      subject.body = "short"
-      subject.validate
-      expect(subject.errors[:body]).to include("is too short (minimum is 20 characters)")
+    context "when body is too short" do
+      before { subject.body = "short" }
+
+      it "is invalid" do
+        subject.validate
+        expect(subject.errors[:body]).to include("is too short (minimum is 20 characters)")
+      end
     end
 
-    it "is invalid if body is too long" do
-      subject.body = "A" * 101
-      subject.validate
-      expect(subject.errors[:body]).to include("is too long (maximum is 100 characters)")
+    context "when body is too long" do
+      before { subject.body = "A" * 101 }
+
+      it "is invalid" do
+        subject.validate
+        expect(subject.errors[:body]).to include("is too long (maximum is 100 characters)")
+      end
     end
   end
 
-describe "callbacks" do
-  it "calls notify_project_owner after create if user is freelancer" do
-    user.update(role: :freelancer)
-    expect_any_instance_of(Comment).to receive(:notify_project_owner)
-    create(:comment, user: user, project: project)
-  end
+  describe "callbacks" do
+    context "when user is a freelancer" do
+      before { user.update(role: :freelancer) }
 
-  it "calls log_deletion before destroy" do
-    comment = create(:comment)
-    comment.destroy
-  end
-end
+      it "calls notify_project_owner after create" do
+        expect_any_instance_of(Comment).to receive(:notify_project_owner)
+        create(:comment, user: user, project: project)
+      end
+    end
 
+    context "when comment is destroyed" do
+      let!(:comment) { create(:comment, user: user, project: project) }
+
+      it "calls log_deletion before destroy" do
+        expect(comment).to receive(:log_deletion)
+        comment.destroy
+      end
+    end
+  end
 end

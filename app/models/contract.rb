@@ -7,7 +7,8 @@ class Contract < ApplicationRecord
   belongs_to :freelancer, class_name: 'User'
   belongs_to :client, class_name: 'User'
 
-  enum status: { active: 1, completed: 2 }
+  enum :status, { active: 1, completed: 2 } 
+  validates :status, inclusion: { in: statuses.keys }
 
   private
 

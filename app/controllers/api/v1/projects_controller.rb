@@ -1,14 +1,14 @@
 class Api::V1::ProjectsController < Api::V1::BaseController
   before_action :set_project, only: [:show, :update, :destroy]
   before_action :authorize_client_user!, only: [:create, :update, :destroy]
-
-  # GET /api/v1/projects
+  
   def index
+    Rails.logger.debug "Current user: #{current_user.inspect}"
+    Rails.logger.debug "Current application: #{current_application.inspect}"
+
     if current_user&.client?
       @projects = current_user.projects.includes(:skills)
-    elsif current_user&.freelancer?
-      @projects = Project.includes(:skills).all
-    elsif current_application
+    elsif current_user&.freelancer? || current_application
       @projects = Project.includes(:skills).all
     else
       @projects = []
@@ -16,7 +16,7 @@ class Api::V1::ProjectsController < Api::V1::BaseController
     render :index
   end
 
-  # GET /api/v1/projects/:id
+
   def show
     if current_user&.client? && @project.client_id != current_user.id
       render json: { error: "Unauthorized access." }, status: :unauthorized
@@ -25,8 +25,10 @@ class Api::V1::ProjectsController < Api::V1::BaseController
     end
   end
 
-  # POST /api/v1/projects
   def create
+    Rails.logger.debug "Token: #{doorkeeper_token.inspect}"
+    Rails.logger.debug "Current user: #{current_user&.id}, Role: #{current_user&.role}"
+
     @project = current_user.projects.build(project_params.except(:skill_ids, :new_skills))
 
     if @project.budget.present? && @project.budget.to_f < 0
@@ -43,7 +45,6 @@ class Api::V1::ProjectsController < Api::V1::BaseController
     end
   end
 
-  # PATCH/PUT /api/v1/projects/:id
   def update
     if current_user&.id != @project.client_id
       return render json: { error: "Unauthorized action." }, status: :unauthorized
@@ -63,7 +64,6 @@ class Api::V1::ProjectsController < Api::V1::BaseController
     end
   end
 
-  # DELETE /api/v1/projects/:id
   def destroy
     if current_user&.id != @project.client_id
       render json: { error: "Unauthorized action." }, status: :unauthorized
@@ -84,7 +84,6 @@ class Api::V1::ProjectsController < Api::V1::BaseController
     params.require(:project).permit(:title, :description, :budget, :deadline, :new_skills, skill_ids: [])
   end
 
-  # Only allow actual user clients to create/update/destroy
   def authorize_client_user!
     unless current_user&.client?
       render json: { error: "Only client users can manage projects." }, status: :forbidden
