@@ -42,6 +42,9 @@ RSpec.configure do |config|
     Rails.logger.debug "Token expired?: #{Doorkeeper::AccessToken.last&.expired?}"
     Rails.logger.debug "Token revoked?: #{Doorkeeper::AccessToken.last&.revoked_at.present?}"
   end
+  config.before(:suite) do
+    Time.zone = 'Asia/Kolkata' # or your local timezone
+  end
 
   # ✅ FactoryBot methods like `create`, `build`
   config.include FactoryBot::Syntax::Methods

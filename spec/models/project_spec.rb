@@ -1,159 +1,144 @@
 require 'rails_helper'
 
 RSpec.describe Project, type: :model do
+  let(:client) { create(:user, role: :client) }
+  let(:project) { create(:project, client: client, title: "Important Project to be done") }
+
+
   describe "associations" do
-    it "belongs to client" do
-      assoc = described_class.reflect_on_association(:client)
+    let(:assoc) { |example| described_class.reflect_on_association(example.metadata[:association]) }
+
+    it "belongs to client", association: :client do
       expect(assoc.macro).to eq(:belongs_to)
     end
 
-    it "client association has class_name 'User'" do
-      assoc = described_class.reflect_on_association(:client)
+    it "client association has class_name 'User'", association: :client do
       expect(assoc.class_name).to eq("User")
     end
 
-    it "client association has inverse_of :projects" do
-      assoc = described_class.reflect_on_association(:client)
+    it "client association has inverse_of :projects", association: :client do
       expect(assoc.options[:inverse_of]).to eq(:projects)
     end
 
-    it "has many bids" do
-      assoc = described_class.reflect_on_association(:bids)
+    it "has many bids", association: :bids do
       expect(assoc.macro).to eq(:has_many)
     end
 
-    it "bids are dependent destroy" do
-      assoc = described_class.reflect_on_association(:bids)
+    it "bids are dependent destroy", association: :bids do
       expect(assoc.options[:dependent]).to eq(:destroy)
     end
 
-    it "has many comments" do
-      assoc = described_class.reflect_on_association(:comments)
+    it "has many comments", association: :comments do
       expect(assoc.macro).to eq(:has_many)
     end
 
-    it "comments are dependent destroy" do
-      assoc = described_class.reflect_on_association(:comments)
+    it "comments are dependent destroy", association: :comments do
       expect(assoc.options[:dependent]).to eq(:destroy)
     end
 
-    it "has many contracts" do
-      assoc = described_class.reflect_on_association(:contracts)
+    it "has many contracts", association: :contracts do
       expect(assoc.macro).to eq(:has_many)
     end
 
-    it "contracts are dependent destroy" do
-      assoc = described_class.reflect_on_association(:contracts)
+    it "contracts are dependent destroy", association: :contracts do
       expect(assoc.options[:dependent]).to eq(:destroy)
     end
 
-    it "has many messages" do
-      assoc = described_class.reflect_on_association(:messages)
+    it "has many messages", association: :messages do
       expect(assoc.macro).to eq(:has_many)
     end
 
-    it "messages are dependent destroy" do
-      assoc = described_class.reflect_on_association(:messages)
+    it "messages are dependent destroy", association: :messages do
       expect(assoc.options[:dependent]).to eq(:destroy)
     end
 
-    it "has many reviews" do
-      assoc = described_class.reflect_on_association(:reviews)
+    it "has many reviews", association: :reviews do
       expect(assoc.macro).to eq(:has_many)
     end
 
-    it "reviews are dependent destroy" do
-      assoc = described_class.reflect_on_association(:reviews)
+    it "reviews are dependent destroy", association: :reviews do
       expect(assoc.options[:dependent]).to eq(:destroy)
     end
 
-    it "has many skill_assignments" do
-      assoc = described_class.reflect_on_association(:skill_assignments)
+    it "has many skill_assignments", association: :skill_assignments do
       expect(assoc.macro).to eq(:has_many)
     end
 
-    it "skill_assignments are dependent destroy" do
-      assoc = described_class.reflect_on_association(:skill_assignments)
+    it "skill_assignments are dependent destroy", association: :skill_assignments do
       expect(assoc.options[:dependent]).to eq(:destroy)
     end
 
-    it "has a has_many association with skills" do
-      assoc = described_class.reflect_on_association(:skills)
+    it "has a has_many association with skills", association: :skills do
       expect(assoc.macro).to eq(:has_many)
     end
 
-    it "has a through association with skill_assignments for skills" do
-      assoc = described_class.reflect_on_association(:skills)
+    it "has a through association with skill_assignments for skills", association: :skills do
       expect(assoc.options[:through]).to eq(:skill_assignments)
     end
 
-    it "has a has_many association with freelancers" do
-      assoc = described_class.reflect_on_association(:freelancers)
+    it "has a has_many association with freelancers", association: :freelancers do
       expect(assoc.macro).to eq(:has_many)
     end
 
-    it "has a through association with bids for freelancers" do
-      assoc = described_class.reflect_on_association(:freelancers)
+    it "has a through association with bids for freelancers", association: :freelancers do
       expect(assoc.options[:through]).to eq(:bids)
     end
 
-    it "has a source association :user for freelancers" do
-      assoc = described_class.reflect_on_association(:freelancers)
+    it "has a source association :user for freelancers", association: :freelancers do
       expect(assoc.options[:source]).to eq(:user)
     end
   end
 
   describe "validations" do
-    subject { FactoryBot.create(:project) }
+    subject { build(:project) }
 
     it "validates presence of title" do
-      project = Project.new(title: nil)
-      project.validate
-      expect(project.errors[:title]).to include("can't be blank")
+      subject.title = nil
+      subject.validate
+      expect(subject.errors[:title]).to include("can't be blank")
     end
 
     it "validates uniqueness of title (case insensitive)" do
-      FactoryBot.create(:project, title: "Unique Project is created")
-      duplicate = FactoryBot.build(:project, title: "UNIQUE PROJECT IS CREATED")
+      create(:project, title: "Unique Project is created")
+      duplicate = build(:project, title: "UNIQUE PROJECT IS CREATED")
       duplicate.validate
       expect(duplicate.errors[:title]).to include("has already been taken")
     end
 
     it "validates length of title is at least 20" do
-      project = FactoryBot.build(:project, title: "Too short")
-      project.validate
-      expect(project.errors[:title]).to include("is too short (minimum is 20 characters)")
+      subject.title = "Too short"
+      subject.validate
+      expect(subject.errors[:title]).to include("is too short (minimum is 20 characters)")
     end
 
     it "validates length of title is at most 100" do
-      long_title = "A" * 101
-      project = FactoryBot.build(:project, title: long_title)
-      project.validate
-      expect(project.errors[:title]).to include("is too long (maximum is 100 characters)")
+      subject.title = "A" * 101
+      subject.validate
+      expect(subject.errors[:title]).to include("is too long (maximum is 100 characters)")
     end
 
     it "validates presence of description" do
-      project = Project.new(description: nil)
-      project.validate
-      expect(project.errors[:description]).to include("can't be blank")
+      subject.description = nil
+      subject.validate
+      expect(subject.errors[:description]).to include("can't be blank")
     end
 
     it "validates presence of budget" do
-      project = Project.new(budget: nil)
-      project.validate
-      expect(project.errors[:budget]).to include("can't be blank")
+      subject.budget = nil
+      subject.validate
+      expect(subject.errors[:budget]).to include("can't be blank")
     end
 
     it "validates presence of deadline" do
-      project = Project.new(deadline: nil)
-      project.validate
-      expect(project.errors[:deadline]).to include("can't be blank")
+      subject.deadline = nil
+      subject.validate
+      expect(subject.errors[:deadline]).to include("can't be blank")
     end
 
     it "validates numericality of budget >= 0" do
-      project = Project.new(budget: -100)
-      project.validate
-      expect(project.errors[:budget]).to include("must be a non-negative number")
+      subject.budget = -100
+      subject.validate
+      expect(subject.errors[:budget]).to include("must be a non-negative number")
     end
   end
 
@@ -172,27 +157,31 @@ describe "custom validations" do
     end
   end
 
-  context "when deadline is today" do
-    it "is valid" do
-      project = build(:project, deadline: Date.today)
-      expect(project).to be_valid
-    end
-  end
+context "when deadline is today" do
+  let(:project) { build(:project, deadline: Time.zone.today.end_of_day) }
 
-  context "when deadline is in the future" do
-    it "is valid" do
-      project = build(:project, deadline: Date.tomorrow)
-      expect(project).to be_valid
-    end
+  it "is valid" do
+    expect(project).to be_valid
   end
 end
 
-describe "scopes" do
-  let(:client) { create(:user, role: :client) }
-  let!(:active_project) { create(:project, deadline: Date.tomorrow, client: client) }
+context "when deadline is in the future" do
+  let(:project) { build(:project, deadline: Time.zone.today + 1.day) }
+
+  it "is valid" do
+    expect(project).to be_valid
+  end
+end
+
+end
+
+  describe "scopes" do
+  let!(:active_project) do
+    create(:project, deadline: Time.zone.today + 1.day, client: client)
+  end
 
   let!(:completed_project) do
-    build(:project, deadline: Date.yesterday, client: client).tap { |p| p.save(validate: false) }
+    build(:project, deadline: Time.zone.today - 1.day, client: client).tap { |p| p.save(validate: false) }
   end
 
   it "returns active projects" do
@@ -216,12 +205,12 @@ describe "scopes" do
     expect(ordered.first.deadline).to be <= ordered.last.deadline
   end
 end
-describe "callbacks" do
-  it "logs a message before destruction" do
-    project = create(:project, title: "Important Project to be done")
-    expect(Rails.logger).to receive(:info).with("Project 'Important Project to be done' is being deleted.")
-    project.destroy
-  end
-end
 
+
+  describe "callbacks" do
+    it "logs a message before destruction" do
+      expect(Rails.logger).to receive(:info).with("Project 'Important Project to be done' is being deleted.")
+      project.destroy
+    end
+  end
 end

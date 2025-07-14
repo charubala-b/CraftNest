@@ -84,11 +84,6 @@ class Api::V1::ProjectsController < Api::V1::BaseController
     params.require(:project).permit(:title, :description, :budget, :deadline, :new_skills, skill_ids: [])
   end
 
-  def authorize_client_user!
-    unless current_user&.client?
-      render json: { error: "Only client users can manage projects." }, status: :forbidden
-    end
-  end
 
   def assign_skills(project, skill_ids)
     project.skill_assignments.destroy_all
