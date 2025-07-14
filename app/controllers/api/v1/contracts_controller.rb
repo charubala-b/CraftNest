@@ -73,17 +73,6 @@ class Api::V1::ContractsController < Api::V1::BaseController
     params.require(:contract).permit(:project_id, :freelancer_id, :status)
   end
 
-  def authorize_client!
-    unless current_user&.client?
-      render json: { error: "Only clients can perform this action." }, status: :forbidden
-    end
-  end
-
-  def authorize_access_to_contract!
-    return if @contract.client_id == current_user.id || @contract.freelancer_id == current_user.id
-
-    render json: { error: "You are not authorized to view this contract." }, status: :unauthorized
-  end
 
   def handle_parameter_missing(exception)
     render json: { error: exception.message }, status: :bad_request

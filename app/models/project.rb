@@ -1,7 +1,8 @@
 class Project < ApplicationRecord
   include Ransackable
-  scope :active, -> { where("deadline > ?", Date.today) }
-  scope :completed, -> { where("deadline <= ?", Date.today) }
+  scope :active, -> { where('deadline >= ?', Time.zone.today) }
+scope :completed, -> { where('deadline < ?', Time.zone.today) }
+
   scope :ordered_by_deadline, -> { order(deadline: :asc) }
 
   before_destroy :log_project_destruction
@@ -28,7 +29,7 @@ class Project < ApplicationRecord
   private
 
   def deadline_cannot_be_in_the_past
-    if deadline.present? && deadline < Date.today
+    if deadline.present? && deadline < Time.zone.today
       errors.add(:deadline, "can't be in the past.")
     end
   end

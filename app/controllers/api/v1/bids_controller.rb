@@ -46,25 +46,18 @@ class Api::V1::BidsController < Api::V1::BaseController
 
 def destroy
   if current_user.freelancer?
-    if @bid.user_id != current_user.id
-      render json: { error: "Unauthorized action." }, status: :unauthorized
-    elsif @bid.accepted?
-      render json: { error: "You can't delete an accepted bid." }, status: :forbidden
-    else
-      @bid.destroy
-      head :no_content
-    end
-   end
-end
+    return render json: { error: "Unauthorized action." }, status: :unauthorized if @bid.user_id != current_user.id
+    return render json: { error: "You can't delete an accepted bid." }, status: :forbidden if @bid.accepted?
 
+    perform_destroy(@bid)
+  end
+end
 
   def accept
     if @bid.project.client_id != current_user.id
       render json: { error: "Unauthorized action." }, status: :unauthorized
     else
-      ActiveRecord::Base.transaction do
-        @bid.update!(accepted: true)
-      end
+      @bid.update!(accepted: true)
       render json: { message: "Bid accepted successfully." }, status: :ok
     end
   rescue ActiveRecord::RecordInvalid => e
@@ -87,15 +80,9 @@ end
     render json: { error: "Bid not found." }, status: :not_found unless @bid
   end
 
-  def authorize_freelancer!
-    unless current_user.freelancer?
-      render json: { error: "Only freelancers can perform this action." }, status: :forbidden
-    end
+  def perform_destroy(bid)
+    bid.destroy
+    head :no_content
   end
 
-  def authorize_client!
-    unless current_user.client?
-      render json: { error: "Only clients can perform this action." }, status: :forbidden
-    end
-  end
 end

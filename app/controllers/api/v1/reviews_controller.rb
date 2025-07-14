@@ -51,18 +51,4 @@ class Api::V1::ReviewsController < Api::V1::BaseController
     params.require(:review).permit(:ratings, :review, :project_id, :reviewee_id)
   end
 
-
-  def authorized_to_view_review?(project)
-    if current_user.client?
-      project.client_id == current_user.id
-    elsif current_user.freelancer?
-      Contract.exists?(project_id: project.id, freelancer_id: current_user.id)
-    else
-      false
-    end
-  end
-
-  def authorized_to_create_review?(project)
-    authorized_to_view_review?(project)
-  end
 end
