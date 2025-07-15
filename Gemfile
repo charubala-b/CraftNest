@@ -38,6 +38,12 @@ gem 'rabl'
 #gem for api authentication
 gem 'doorkeeper'
 
+gem "activestorage-validator"
+
+gem 'chartkick'
+gem 'groupdate'
+
+
 #gem for authentication
 group :development, :test do
   gem 'rspec-rails'

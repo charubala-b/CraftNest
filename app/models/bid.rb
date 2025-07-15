@@ -9,6 +9,7 @@ class Bid < ApplicationRecord
 
   belongs_to :project
   belongs_to :user
+  belongs_to :contract,optional: true
 
   # has_one :contract, dependent: :destroy
 

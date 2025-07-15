@@ -11,3 +11,8 @@ pin "@rails/ujs", to: "rails-ujs.js"
 
 pin "enums", to: "enums.js"
 pin_all_from "app/javascript/modifiers", under: "modifiers"
+
+pin "chartkick", to: "chartkick.js"
+pin "chart.js", to: "https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.js"
+pin "chartjs-adapter-date-fns", to: "https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns@3.0.0/dist/chartjs-adapter-date-fns.bundle.min.js"
+pin "@kurkle/color", to: "@kurkle--color.js" # @0.3.4
