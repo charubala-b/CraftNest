@@ -74,7 +74,20 @@ class FreelancerDashboardController < ApplicationController
     @new_message = Message.new
   end
 
+    def update_availability
+    if current_user.update(availability_params)
+      flash[:notice] = "Availability updated."
+    else
+      flash[:alert] = "Could not update availability."
+    end
+    redirect_back fallback_location: freelancer_dashboard_path
+  end
+
   private
+
+  def availability_params
+    params.require(:user).permit(:available_for_work, :busy_until)
+  end
 
   def set_project_and_client
     @project = Project.find_by(id: params[:project_id])

@@ -78,7 +78,7 @@ RSpec.describe User, type: :model do
 
     it "contracts_as_freelancer has foreign_key freelancer_id" do
       assoc = described_class.reflect_on_association(:contracts_as_freelancer)
-      expect(assoc.options[:foreign_key]).to eq(:freelancer_id)
+      expect(assoc.options[:foreign_key]).to eq("freelancer_id")
     end
 
     it "contracts_as_freelancer are dependent destroy" do

@@ -32,6 +32,8 @@ root to: redirect { |params, req|
 
   # Shared Dashboard
   get "/dashboard", to: "dashboard#home"
+  get 'freelancers/:id/analytics', to: 'analytics#show', as: 'freelancer_analytics'
+
 
   # Chat Routes
   get 'chat/:freelancer_id/:project_id', to: 'dashboard#chat', as: 'chat_room'
@@ -88,9 +90,5 @@ namespace :api do
     resources :comments, only: [:update, :destroy, :show]
   end
 end
-
-
-
-
-
+patch 'freelancer/update_availability', to: 'freelancer_dashboard#update_availability', as: :update_freelancer_availability
 end

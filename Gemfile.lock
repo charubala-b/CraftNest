@@ -70,6 +70,8 @@ GEM
       activerecord (= 7.2.2.1)
       activesupport (= 7.2.2.1)
       marcel (~> 1.0)
+    activestorage-validator (0.5.0)
+      rails (>= 6.1.0)
     activesupport (7.2.2.1)
       base64
       benchmark (>= 0.3)
@@ -108,6 +110,7 @@ GEM
       rack-test (>= 0.6.3)
       regexp_parser (>= 1.5, < 3.0)
       xpath (~> 3.2)
+    chartkick (5.2.0)
     concurrent-ruby (1.3.5)
     connection_pool (2.5.3)
     crass (1.0.6)
@@ -155,6 +158,8 @@ GEM
     formtastic_i18n (0.7.0)
     globalid (1.2.1)
       activesupport (>= 6.1)
+    groupdate (6.7.0)
+      activesupport (>= 7.1)
     has_scope (0.8.2)
       actionpack (>= 5.2)
       activesupport (>= 5.2)
@@ -465,15 +470,18 @@ PLATFORMS
 
 DEPENDENCIES
   activeadmin
+  activestorage-validator
   bootsnap
   brakeman
   byebug
   capybara
+  chartkick
   debug
   devise
   doorkeeper
   factory_bot_rails
   faker
+  groupdate
   importmap-rails
   jbuilder
   omniauth

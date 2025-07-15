@@ -196,11 +196,48 @@
 
   <!-- 🔹 Profile Tab -->
 <div id="profile" class="tab-content">
-  <div class="profile-card">
+  <div class="profile-card" style="background-color: #f8f9fa; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+    <% if current_user.freelancer? %>
+  <div class="d-flex align-items-center mb-3" style="gap: 10px; background-color: lightblue; padding: 10px; border-radius: 5px; widht: 30px;">
+    <span class="badge rounded-pill" style="background-color: #27ae60; width: 8px; height: 12px; display: inline-block; margin-right: 6px;"></span>
+    <strong id="availability-label">
+      <%= current_user.available_for_work? ? "Active" : "Busy" %>
+    </strong>
+    <div class="dropdown" >
+      <button class="btn btn-light btn-sm dropdown-toggle" type="button" id="availabilityDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+        Change
+      </button>
+      <ul class="dropdown-menu" aria-labelledby="availabilityDropdown">
+        <li>
+          <%= form_with model: current_user, url: update_freelancer_availability_path, method: :patch, local: true do |f| %>
+            <%= f.hidden_field :available_for_work, value: true %>
+            <%= f.hidden_field :busy_until, value: nil %>
+            <button type="submit" class="dropdown-item">
+              <span class="badge rounded-pill" style="background-color: #27ae60; width: 10px; height: 10px; display: inline-block; margin-right: 6px;"></span>
+              Active
+            </button>
+          <% end %>
+        </li>
+        <li>
+          <%= form_with model: current_user, url: update_freelancer_availability_path, method: :patch, local: true do |f| %>
+            <%= f.hidden_field :available_for_work, value: false %>
+            <div class="dropdown-item d-flex align-items-center">
+              <span class="badge rounded-pill" style="background-color: #e67e22; width: 10px; height: 10px; display: inline-block; margin-right: 6px;"></span>
+              Busy till:
+              <%= f.date_field :busy_until, value: current_user.busy_until, class: "form-control form-control-sm ms-2", style: "width: 120px;" %>
+              <button type="submit" class="btn btn-link btn-sm ms-2 p-0">Set</button>
+            </div>
+          <% end %>
+        </li>
+      </ul>
+    </div>
+  </div>
+<% end %>
+
     <h4>👤 <%= current_user.name %></h4>
     <p><strong>Email:</strong> <%= current_user.email %></p>
     <p><strong>Role:</strong> <%= current_user.role.humanize %></p>
-
+    <%= link_to '📈 View Analytics', freelancer_analytics_path(current_user.id), class: "btn btn-info" %>
     <h5 class="mt-4">Your Skills</h5>
     <% if current_user.skills.any? %>
       <ul class="list-group mb-3">

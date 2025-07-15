@@ -31,6 +31,8 @@ class User < ApplicationRecord
   has_many :skill_assignments, as: :skillable, dependent: :destroy
   has_many :skills, through: :skill_assignments
 
+  has_many :contracts_as_freelancer, class_name: "Contract", foreign_key: "freelancer_id", dependent: :destroy
+
   
 
   ransacker :created_year do

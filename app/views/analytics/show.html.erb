@@ -1,0 +1,36 @@
+<%= stylesheet_link_tag "analytics", media: "all", "data-turbo-track": "reload" %>
+
+<% if current_user.freelancer? %>
+  <%= link_to "←Back", freelancer_dashboard_path, class: "btn btn-danger", style: "padding: 8px 16px; font-weight: bold; border-radius: 4px; margin-top: 5px; margin-left: 5px" %>
+<% elsif current_user.client? %>
+  <%= link_to "← Back", client_dashboard_path(tab: "project"), class: "btn btn-danger", style: "padding: 8px 16px; font-weight: bold; border-radius: 4px; margin-top: 5px; margin-left: 5px" %>
+<% end %>
+<div class="analytics-container">
+  <h1>📈 Freelancer Analytics</h1>
+
+  <div class="card" style="background: linear-gradient(135deg, #e0f7fa, #ffffff);">
+    <h3>Bid Win Rate</h3>
+    <p><%= @bid_win_rate %> %</p>
+  </div>
+
+  <div class="card" style="background: linear-gradient(135deg, #f3e5f5, #ffffff);">
+    <h3>Average Rating</h3>
+    <p><%= @average_rating %> / 5</p>
+  </div>
+
+  <% if current_user == @freelancer %>
+    <div class="card" style="background: linear-gradient(135deg, #e8f5e9, #ffffff);">
+      <h3>Revenue Over Last 6 Months</h3>
+      <%= line_chart @revenue_over_time, colors: ["#4B6CB7"] %>
+    </div>
+  <% end %>
+
+  <div class="card" style="background: linear-gradient(135deg, #fff3e0, #ffffff);">
+    <h3>Most Requested Skills</h3>
+    <ul>
+      <% @most_requested_skills.each do |skill, count| %>
+        <li><%= skill %> — <%= count %> times</li>
+      <% end %>
+    </ul>
+  </div>
+</div>

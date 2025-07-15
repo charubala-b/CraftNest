@@ -14,6 +14,16 @@
 <div class="chat-container">
   <div class="chat-header">
     Chat with <%= @freelancer.name %> on <%= @project.title %>
+    <% if @freelancer.available_for_work? %>
+    <span class="badge rounded-pill" style="background-color: #27ae60; color: #fff; margin-left: 10px;">Active</span>
+  <% else %>
+    <span class="badge rounded-pill" style="background-color: #e67e22; color: #fff; margin-left: 10px;">
+      Busy
+      <% if @freelancer.busy_until.present? %>
+        (till <%= @freelancer.busy_until.strftime("%b %d, %Y") %>)
+      <% end %>
+    </span>
+  <% end %>
   </div>
 
   <div class="chat-messages">

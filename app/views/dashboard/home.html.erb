@@ -52,8 +52,9 @@
           <h4>Bids</h4>
           <% if project.bids.any? %>
             <% accepted_bid = project.bids.find_by(accepted: true) %>
-            <% project.bids.ordered_by_price_desc.each do |bid| %>
+            <% project.bids.ordered_by_price_asc.each do |bid| %>
               <div class="bid-card <%= 'accepted-card' if bid.accepted? %>">
+                <%= link_to '📈 View Analytics', freelancer_analytics_path(bid.user_id), class: "btn btn-info" %>
                 <p><strong>Freelancer:</strong> <%= bid.user.name %></p>
 
                 <% if bid.user.skills.any? %>
