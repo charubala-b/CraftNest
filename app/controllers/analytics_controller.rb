@@ -20,7 +20,7 @@ class AnalyticsController < ApplicationController
   .each_with_object(Hash.new(0)) do |contract, hash|
     bid = Bid.find_by(project_id: contract.project_id, user_id: contract.freelancer_id, accepted: true)
     if bid
-      month_label = contract.created_at.strftime("%b %Y")  # 👉 "Jul 2025"
+      month_label = contract.created_at.strftime("%b %Y")
       hash[month_label] += bid.proposed_price.to_f
     end
   end
