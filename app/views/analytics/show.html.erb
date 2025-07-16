@@ -1,9 +1,9 @@
 <%= stylesheet_link_tag "analytics", media: "all", "data-turbo-track": "reload" %>
 
 <% if current_user.freelancer? %>
-  <%= link_to "←Back", freelancer_dashboard_path, class: "btn btn-danger", style: "padding: 8px 16px; font-weight: bold; border-radius: 4px; margin-top: 5px; margin-left: 5px" %>
+  <%= link_to "←Back", freelancer_dashboard_path, class: "btn btn-danger", style: "padding: 8px 16px; font-weight: bold; border-radius: 4px; margin-top: 5px; margin-left: 5px", data: { turbo: false } %>
 <% elsif current_user.client? %>
-  <%= link_to "← Back", client_dashboard_path(tab: "project"), class: "btn btn-danger", style: "padding: 8px 16px; font-weight: bold; border-radius: 4px; margin-top: 5px; margin-left: 5px" %>
+  <%= link_to "← Back", client_dashboard_path, class: "btn btn-danger", style: "padding: 8px 16px; font-weight: bold; border-radius: 4px; margin-top: 5px; margin-left: 5px", data: { turbo: false } %>
 <% end %>
 <div class="analytics-container">
   <h1>📈 Freelancer Analytics</h1>

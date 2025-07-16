@@ -7,3 +7,4 @@
 //= link chat.css
 //= link project.css
 //= link application.js
+//= link_tree ../builds

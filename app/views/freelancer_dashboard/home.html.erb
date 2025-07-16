@@ -198,7 +198,7 @@
 <div id="profile" class="tab-content">
   <div class="profile-card" style="background-color: #f8f9fa; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
     <% if current_user.freelancer? %>
-  <div class="d-flex align-items-center mb-3" style="gap: 10px; background-color: lightblue; padding: 10px; border-radius: 5px; widht: 30px;">
+  <div class="d-flex align-items-center mb-3" style="gap: 10px; background-color: #e7f1fb; padding: 10px; border-radius: 5px; widht: 30px; border: 1px solid #d1e7fd; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
     <span class="badge rounded-pill" style="background-color: #27ae60; width: 8px; height: 12px; display: inline-block; margin-right: 6px;"></span>
     <strong id="availability-label">
       <%= current_user.available_for_work? ? "Active" : "Busy" %>
