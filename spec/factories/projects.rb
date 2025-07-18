@@ -4,6 +4,7 @@ FactoryBot.define do
     description { "A valid description for the project." }
     budget { 1000 }
     deadline { 7.days.from_now }
-    association :client, factory: :user
+
+    association :client, factory: [:user, :client]
   end
 end

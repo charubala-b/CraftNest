@@ -8,12 +8,11 @@ scope :completed, -> { where('deadline < ?', Time.zone.today) }
   before_destroy :log_project_destruction
 
   belongs_to :client, class_name: "User", inverse_of: :projects
-
+  has_many :reviews, dependent: :destroy
   has_many :bids, dependent: :destroy
   has_many :comments, dependent: :destroy
   has_many :contracts, dependent: :destroy
   has_many :messages, dependent: :destroy
-  has_many :reviews, dependent: :destroy
   has_many :skill_assignments, as: :skillable, dependent: :destroy
   has_many :skills, through: :skill_assignments
   has_many :freelancers, -> { where(role: :freelancer) }, through: :bids, source: :user

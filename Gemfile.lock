@@ -494,6 +494,7 @@ DEPENDENCIES
   groupdate
   importmap-rails
   jbuilder
+  kaminari
   omniauth
   omniauth-google-oauth2
   pg (~> 1.1)

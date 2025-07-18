@@ -13,17 +13,9 @@
   <% end %>
 </div>
 
+<%= javascript_include_tag "https://cdn.jsdelivr.net/npm/sweetalert2@11" %>
+  <h4 style="margin-left: 35px; padding: 15px;"><i> Welcome <%= current_user.name %>![Client]<i></h4>
 <div class="dashboard-container">
-  <h1 class="dashboard-title">Client Dashboard</h1>
-
-  <!-- Tabs -->
-  <div class="dashboard-tabs">
-    <button class="tab-button active" onclick="openTab(event, 'projects')">Projects</button>
-    <button class="tab-button" onclick="openTab(event, 'contracts')">Contracts</button>
-    <button class="tab-button" onclick="openTab(event, 'messages')">Messages</button>
-    <button class="tab-button" onclick="openTab(event, 'completed_projects')">Completed Projects</button>
-  </div>
-
   <!-- Projects Tab -->
   <div id="projects" class="tab-content" style="display: block;">
     <h2 class="section-title">My Projects</h2>
@@ -71,7 +63,10 @@
                 <% elsif accepted_bid.present? %>
                   <button class="btn btn-outline-secondary" disabled>Not Accepted</button>
                 <% else %>
-                  <%= button_to "Accept Bid", accept_bid_path(bid), method: :post, class: "btn btn-success", data: { confirm: "Accept this bid?" } %>
+                  <%= button_to "Accept Bid", accept_bid_path(bid), method: :post, 
+                    class: "btn btn-success accept-bid-btn", 
+                    data: { bid_id: bid.id, confirm: "Accept this bid?" }, 
+                    onclick: "showSpinner()" %>
                 <% end %>
               </div>
             <% end %>
@@ -118,20 +113,49 @@
   <!-- Contracts Tab -->
   <div id="contracts" class="tab-content">
     <% @contracts.each do |contract| %>
-      <div class="contract-card" style="background: #f0f5fb;">
-        <p><strong>Project:</strong> <%= contract.project.title %></p>
-        <p><strong>Freelancer:</strong> <%= contract.freelancer.name %></p>
-        <p><strong>Status:</strong> <%= contract.status.humanize %></p>
+      <div class="<%= contract.completed? ? 'contract-card' : 'water-card' %>" style="background: <%= contract.completed? ? '#d1f7dc' : '#f0f5fb' %>; border-left: 5px solid <%= contract.completed? ? '#4caf50' : '#2196f3' %>;">
+        <% unless contract.completed? %>
+          <% if contract.start_date.present? && contract.end_date.present? %>
+            <% start_date = contract.start_date.to_date rescue nil %>
+            <% end_date = contract.end_date.to_date rescue nil %>
 
+            <% if start_date && end_date %>
+              <% total_seconds = (end_date.to_time - start_date.to_time).to_i %>
+              <% elapsed_seconds = [(Time.current - start_date.to_time).to_i, 0].max %>
+              <% progress_percent = total_seconds > 0 ? [(elapsed_seconds * 100) / total_seconds, 100].min : 0 %>
+
+                <div class="wave-container" style="--progress:<%= progress_percent %>%;">
+                  <div class="wave wave1"></div>
+                  <div class="wave wave2"></div>
+                </div>
+                <div class="progress-label">
+                <p><strong>Project:</strong> <%= contract.project.title %></p>
+                <p><strong>Freelancer:</strong> <%= contract.freelancer.name %></p>
+                <p><strong>Status:</strong> <%= contract.status.humanize %></p>
+                <%= form_with url: contract_path(contract), method: :patch, local: true, data: { turbo: false } do |f| %>
+                  <%= hidden_field_tag "contract[status]", "completed" %>
+                  <%= f.submit "Mark Complete", class: "btn btn-warning", data: { confirm: "Are you sure?" } %>
+                <% end %>
+                <%= progress_percent %>% Complete</div>
+            <% end %>
+          <% end %>
+        <% end %>
+        
         <% if contract.completed? %>
+          <p><strong>Project:</strong> <%= contract.project.title %></p>
+          <p><strong>Freelancer:</strong> <%= contract.freelancer.name %></p>
+          <p><strong>Status:</strong> <%= contract.status.humanize %></p>
           <div class="review-section">
             <!-- Client Review -->
             <h5>Client's Review for Freelancer</h5>
             <% client_review = contract.project.reviews.find_by(reviewer_id: contract.client_id) %>
             <% if client_review.present? %>
-              <div class="review-card">
-                <p>⭐ <%= client_review.ratings %> - <%= client_review.review %></p>
-                <p><em>by <%= contract.client.name %></em></p>
+              <div class="review-card" style="border-left: 5px solid <%= contract.completed? ? '#4caf50' : '#2196f3' %>;">
+                <em><p>
+                  <% filled_stars = '⭐' * client_review.ratings %>
+                  <% empty_stars = '☆' * (5 - client_review.ratings) %>
+                  <%= filled_stars + empty_stars %> - <%= client_review.review %>
+                </p></em>
               </div>
             <% else %>
               <% if current_user.id == contract.client_id %>
@@ -140,30 +164,28 @@
             <% end %>
 
             <!-- Freelancer Review -->
-<h5>Freelancer's Review for Client</h5>
-<% freelancer_review = contract.project.reviews.find_by(reviewer_id: contract.freelancer_id) %>
-<% if freelancer_review.present? %>
-  <div class="review-card">
-    <p>⭐ <%= freelancer_review.ratings %> - <%= freelancer_review.review %></p>
-    <p><em>by <%= contract.freelancer.name %></em></p>
-  </div>
-<% else %>
-  <% if current_user.id == contract.freelancer_id %>
-    <div id="freelancer-review-section-<%= contract.id %>" 
-         data-reviewee-id="<%= contract.client_id %>" 
-         data-project-id="<%= contract.project_id %>" 
-         data-reviewer-id="<%= current_user.id %>"></div>
-  <% else %>
-    <p>No review has been given yet.</p>
-  <% end %>
-<% end %>
+            <h5>Freelancer's Review for Client</h5>
+            <% freelancer_review = contract.project.reviews.find_by(reviewer_id: contract.freelancer_id) %>
+            <% if freelancer_review.present? %>
+              <div class="review-card" style="border-left: 5px solid <%= contract.completed? ? '#4caf50' : '#2196f3' %>;">
+                <em><p>
+                  <% filled_stars = '⭐' * freelancer_review.ratings %>
+                  <% empty_stars = '☆' * (5 - freelancer_review.ratings) %>
+                  <%= filled_stars + empty_stars %> - <%= freelancer_review.review %>
+                </p></em>
+              </div>
 
+            <% else %>
+              <% if current_user.id == contract.freelancer_id %>
+                <div id="freelancer-review-section-<%= contract.id %>" 
+                  data-reviewee-id="<%= contract.client_id %>" 
+                  data-project-id="<%= contract.project_id %>" 
+                  data-reviewer-id="<%= current_user.id %>"></div>
+              <% else %>
+                <p>No review has been given yet.</p>
+              <% end %>
+            <% end %>
           </div>
-        <% else %>
-          <%= form_with url: contract_path(contract), method: :patch, local: true, data: { turbo: false } do |f| %>
-            <%= hidden_field_tag "contract[status]", "completed" %>
-            <%= f.submit "Mark Complete", class: "btn btn-warning", data: { confirm: "Are you sure?" } %>
-          <% end %>
         <% end %>
       </div>
     <% end %>
@@ -199,6 +221,7 @@
 </div>
 
 <!-- JavaScript -->
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script>
   function openTab(evt, tabId) {
     document.querySelectorAll(".tab-content").forEach(el => el.style.display = "none");
@@ -206,58 +229,6 @@
     document.getElementById(tabId).style.display = "block";
     evt.currentTarget.classList.add("active");
   }
-
-  document.addEventListener("DOMContentLoaded", () => {
-    const currentUserId = document.querySelector('meta[name="current-user-id"]').content;
-    const csrfToken = document.querySelector('meta[name="csrf-token"]').content;
-
-    if (!localStorage.getItem("access_token")) {
-      localStorage.setItem("access_token", "hnvA7SMBcx-pFqH1fuNXOCrH4QEIYDeWksbuJ0CV7-E");
-    }
-
-    document.querySelectorAll("[id^='client-review-section-'], [id^='freelancer-review-section-']").forEach(section => {
-      const projectId = section.dataset.projectId;
-      const reviewerId = section.dataset.reviewerId;
-      const revieweeId = section.dataset.revieweeId;
-
-      fetch(`/api/v1/reviews/${projectId}`, {
-        method: 'GET',
-        headers: {
-          'Authorization': `Bearer ${localStorage.getItem('access_token')}`,
-          'Content-Type': 'application/json'
-        }
-      })
-      .then(res => res.json().catch(() => ({ message: "Invalid JSON" })))
-      .then(data => {
-        if (data && data.id) {
-          section.innerHTML = `
-            <div class="review-card">
-              <p>⭐ ${data.ratings} - ${data.review}</p>
-              <p><em>by you</em></p>
-            </div>
-          `;
-        } else if (data.message === "Review not found") {
-          section.innerHTML = `
-            <form onsubmit="submitReview(event, ${projectId}, ${revieweeId})">
-              <label>Rating (1-5):</label>
-              <input type="number" name="ratings" min="1" max="5" required><br>
-              <label>Review:</label>
-              <textarea name="review" minlength="10" maxlength="100" required></textarea><br>
-              <button type="submit" class="btn btn-sm btn-warning">Submit Review</button>
-            </form>
-            <div class="review-message"></div>
-          `;
-        } else {
-          section.innerHTML = `<p style="color:red;">Unable to load review or form.</p>`;
-        }
-      });
-    });
-
-    const alert = document.querySelector('.alert');
-    if (alert) {
-      setTimeout(() => alert.remove(), 3000);
-    }
-  });
 
   function submitReview(e, projectId, revieweeId) {
     e.preventDefault();
@@ -272,8 +243,7 @@
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'X-CSRF-Token': document.querySelector('meta[name="csrf-token"]').content,
-        'Authorization': `Bearer ${localStorage.getItem('access_token')}`
+        'X-CSRF-Token': document.querySelector('meta[name="csrf-token"]').content
       },
       body: JSON.stringify({
         review: {
@@ -288,10 +258,9 @@
       if (!res.ok) {
         return res.json().then(data => Promise.reject(data));
       }
-      return res.json(); 
+      return res.json();
     })
     .then(() => {
-      // Show a Bootstrap alert after successful review submission
       const flashDiv = document.getElementById('flash-messages');
       if (flashDiv) {
         flashDiv.innerHTML = `
@@ -301,10 +270,7 @@
           </div>
         `;
       }
-      // Optionally, reload the page or section after a short delay
-      setTimeout(() => {
-        location.reload();
-      }, 1200);
+      setTimeout(() => location.reload(), 1200);
     })
     .catch(err => {
       const errorMessage = err.errors ? err.errors.join(', ') : err.message || 'Something went wrong';
@@ -324,4 +290,182 @@
     const form = document.getElementById(`reply-form-${commentId}`);
     form.style.display = (form.style.display === "none" || !form.style.display) ? "block" : "none";
   }
+
+  function showSpinner() {
+    const spinner = document.getElementById("spinner-overlay");
+    if (spinner) spinner.style.display = "flex";
+  }
+
+  function hideSpinner() {
+    const spinner = document.getElementById("spinner-overlay");
+    if (spinner) spinner.style.display = "none";
+  }
+
+  document.addEventListener("DOMContentLoaded", () => {
+    // Load reviews or show form (session-based)
+    document.querySelectorAll("[id^='client-review-section-'], [id^='freelancer-review-section-']").forEach(section => {
+      const projectId = section.dataset.projectId;
+      const reviewerId = section.dataset.reviewerId;
+      const revieweeId = section.dataset.revieweeId;
+
+      fetch(`/api/v1/reviews/${projectId}`, {
+        method: 'GET'
+      })
+      .then(res => {
+        if (!res.ok) {
+          return res.json().then(data => Promise.reject(data));
+        }
+        return res.json();
+      })
+      .then(data => {
+        if (data && data.id) {
+          section.innerHTML = `
+            <div class="review-card">
+              <p>⭐ ${data.ratings} - ${data.review}</p>
+              <p><em>by you</em></p>
+            </div>
+          `;
+        } else if (data.error === "Review not found") {
+          section.innerHTML = `
+            <form onsubmit="submitReview(event, ${projectId}, ${revieweeId})">
+              <label>Rating (1-5):</label>
+              <input type="number" name="ratings" min="1" max="5" required><br>
+              <label>Review:</label>
+              <textarea name="review" minlength="10" maxlength="100" required></textarea><br>
+              <button type="submit" class="btn btn-sm btn-warning">Submit Review</button>
+            </form>
+            <div class="review-message"></div>
+          `;
+        } else {
+          section.innerHTML = `<p style="color:red;">Unable to load review or form.</p>`;
+        }
+      })
+      .catch(() => {
+        section.innerHTML = `<p style="color:red;">Failed to load review.</p>`;
+      });
+    });
+
+    // Auto-dismiss alerts
+    const alert = document.querySelector('.alert');
+    if (alert) {
+      setTimeout(() => {
+        alert.classList.remove("show");
+        alert.classList.add("fade");
+        alert.remove();
+      }, 3000);
+    }
+
+    // Set wave widths
+    document.querySelectorAll('.wave-container').forEach(container => {
+      const progress = container.style.getPropertyValue('--progress');
+      container.style.width = progress;
+    });
+
+    // Animate progress bars
+    document.querySelectorAll('.progress-water-fill').forEach(bar => {
+      const width = bar.style.width;
+      bar.style.width = '0%';
+      setTimeout(() => {
+        bar.style.width = width;
+      }, 100);
+    });
+  });
 </script>
+
+
+<style>
+  .spinner-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background-color: rgba(255, 255, 255, 0.6);
+    display: none;
+    justify-content: center;
+    align-items: center;
+    z-index: 9999;
+  }
+
+  .spinner {
+    width: 50px;
+    height: 50px;
+    border: 6px solid #e0e0e0;
+    border-top: 6px solid #3498db;
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+  }
+
+  @keyframes spin {
+    to {
+      transform: rotate(360deg);
+    }
+  }
+
+  .water-card {
+  position: relative;
+  width: 100%;
+  max-width: 1300px;
+  height: 200px;
+  background-color: #e0f7fa;
+  border-radius: 20px;
+  overflow: hidden;
+  margin-bottom: 20px;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+  opacity: 0.9;
+  transition: background-color 0.3s ease;
+  padding: 20px;
+}
+
+.wave-container {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  height: 100%;
+  width: var(--progress);
+  background: #4dd0e1;
+  overflow: hidden;
+  border-radius: 20px 0 0 20px;
+  transition: width 1s ease-in-out;
+}
+
+.wave {
+  position: absolute;
+  width: 200%;
+  height: 200%;
+  top: -100%;
+  background: url("data:image/svg+xml;utf8,\
+    <svg viewBox='0 0 120 28' xmlns='http://www.w3.org/2000/svg'>\
+      <path fill='%23ffffff' fill-opacity='0.6' d='M0,20 C30,10 90,30 120,20 L120,30 L0,30 Z'></path>\
+    </svg>") repeat-x;
+  background-size: 50% 100%;
+  animation: waveMove 4s linear infinite;
+  opacity: 0.6;
+}
+
+.wave.wave2 {
+  top: -90%;
+  animation-delay: -2s;
+  opacity: 0.4;
+}
+
+@keyframes waveMove {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-50%);
+  }
+}
+
+.progress-label {
+  position: absolute;
+  bottom: 10px;
+  left: 10px;
+  font-weight: bold;
+  color: #004d40;
+  z-index: 2;
+  padding: 5px 10px;
+}
+
+</style>

@@ -84,8 +84,12 @@ namespace :api do
     get 'contracts/completed', to: 'contracts#completed'
     resources :contracts, only: [:index, :show, :create, :update]
 
-    resources :reviews, only: [:index, :create]
-    get 'reviews/:project_id', to: 'reviews#show'  # uses project_id & current_user context
+    resources :reviews, only: [] do
+      collection do
+        get  ':project_id', to: 'reviews#show',   as: :show
+        post ':project_id', to: 'reviews#create', as: :create
+      end
+    end # uses project_id & current_user context
 
     resources :comments, only: [:update, :destroy, :show]
   end

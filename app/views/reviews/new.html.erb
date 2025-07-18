@@ -16,7 +16,12 @@
     <%= f.hidden_field :project_id, value: @project.id %>
 
     <%= f.label :ratings, "Rating (1-5)", class: "form-label fw-bold" %>
-    <%= f.number_field :ratings, in: 1..5, required: true, class: "form-control", placeholder: "Rating out of 5" %>
+    <div class="star-rating" id="star-rating">
+      <% 1.upto(5) do |i| %>
+        <span class="star" data-value="<%= i %>">&#9733;</span>
+      <% end %>
+    </div>
+    <%= f.hidden_field :ratings, id: "rating-value", required: true %>
 
     <%= f.label :review, "Your Review", class: "form-label fw-bold mt-3" %>
     <%= f.text_area :review, class: "form-control", rows: 4, placeholder: "Write your review...", required: true %>
@@ -25,9 +30,9 @@
   <% end %>
 </div>
 
-
 <script>
   document.addEventListener("DOMContentLoaded", () => {
+    // Auto-dismiss flash alert
     const alert = document.querySelector('.alert');
     if (alert) {
       setTimeout(() => {
@@ -36,5 +41,60 @@
         alert.remove();
       }, 3000);
     }
+
+    // Star rating interaction
+    const stars = document.querySelectorAll('#star-rating .star');
+    const ratingInput = document.getElementById('rating-value');
+
+    stars.forEach((star) => {
+      star.addEventListener('click', () => {
+        const rating = star.dataset.value;
+        ratingInput.value = rating;
+
+        stars.forEach(s => {
+          s.classList.toggle('selected', s.dataset.value <= rating);
+        });
+      });
+
+      star.addEventListener('mouseover', () => {
+        stars.forEach(s => {
+          s.classList.remove('hover');
+          if (s.dataset.value >= star.dataset.value) {
+            s.classList.add('hover');
+          }
+        });
+      });
+
+      star.addEventListener('mouseout', () => {
+        stars.forEach(s => s.classList.remove('hover'));
+      });
+    });
   });
 </script>
+
+<style>
+.star-rating {
+  display: flex;
+  flex-direction: row;
+  justify-content: flex-start
+  gap: 5px;
+  font-size: 2rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.star-rating .star.selected {
+  color: #f5c518; /* gold */
+}
+
+.star-rating .star.selected,
+.star-rating .star:hover{
+  color: #f5c518; /* gold */
+}
+.star-rating .star {
+  color: #ddd;
+  transition: color 0.3s;
+  cursor: pointer;
+}
+
+</style>
