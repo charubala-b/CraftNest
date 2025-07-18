@@ -4,6 +4,7 @@ class DashboardController < ApplicationController
 
   def home
     # Use Devise's current_user
+    
     completed_project_ids = Contract.where(status: :completed, client_id: current_user.id).pluck(:project_id)
 
     @active_projects = current_user.projects.where.not(id: completed_project_ids).includes(:bids, :comments)
@@ -15,6 +16,7 @@ class DashboardController < ApplicationController
                   .where("sender_id = :id OR receiver_id = :id", id: current_user.id)
                   .includes(:project, :sender, :receiver)
                   .order(created_at: :desc)
+    
   end
 
   def chat

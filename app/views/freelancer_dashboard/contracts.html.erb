@@ -1,3 +1,5 @@
+<%= stylesheet_link_tag "dashboard", media: "all", "data-turbo-track": "reload" %>
+
 <div id="flash-messages" class="position-fixed top-0 end-0 p-3" style="z-index: 1050;">
   <% flash.each do |key, message| %>
     <div class="alert alert-<%= key == "notice" ? "success" : "danger" %> alert-dismissible fade show" role="alert">
@@ -7,34 +9,92 @@
   <% end %>
 </div>
 
+<%= javascript_include_tag "https://cdn.jsdelivr.net/npm/sweetalert2@11" %>
 <h1>My Contracts</h1>
 
 <% if @contracts.any? %>
   <% @contracts.each do |contract| %>
-    <div class="contract-card">
-      <p><strong>Project:</strong> <%= contract.project.title %></p>
-      <p><strong>Client:</strong> <%= contract.client.name %></p>
-      <p><strong>Status:</strong> <%= contract.status.humanize %></p>
+    <div class="<%= contract.completed? ? 'contract-card' : 'water-card' %>" style="background: <%= contract.completed? ? '#d1f7dc' : '#f0f5fb' %>; border-left: 5px solid <%= contract.completed? ? '#4caf50' : '#2196f3' %>;">
+        <% unless contract.completed? %>
+          <% if contract.start_date.present? && contract.end_date.present? %>
+            <% start_date = contract.start_date.to_date rescue nil %>
+            <% end_date = contract.end_date.to_date rescue nil %>
 
-      <% if contract.completed? %>
-        <% review = contract.project.reviews.find_by(reviewer_id: current_user.id) %>
-        <% if review.present? %>
-          <div class="review-block">
-            <p><strong>You already reviewed:</strong> ⭐ <%= review.ratings %></p>
-            <p><%= review.review %></p>
-          </div>
-        <% else %>
-          <%= link_to "Write Review", new_review_path(reviewee_id: contract.client_id, project_id: contract.project_id), class: "btn btn-primary" %>
+            <% if start_date && end_date %>
+              <% total_seconds = (end_date.to_time - start_date.to_time).to_i %>
+              <% elapsed_seconds = [(Time.current - start_date.to_time).to_i, 0].max %>
+              <% progress_percent = total_seconds > 0 ? [(elapsed_seconds * 100) / total_seconds, 100].min : 0 %>
+
+                <div class="wave-container" style="--progress:<%= progress_percent %>%;">
+                  <div class="wave wave1"></div>
+                  <div class="wave wave2"></div>
+                </div>
+                <div class="progress-label">
+                <p><strong>Project:</strong> <%= contract.project.title %></p>
+                <p><strong>Freelancer:</strong> <%= contract.freelancer.name %></p>
+                <p><strong>Status:</strong> <%= contract.status.humanize %></p>
+                <%= form_with url: contract_path(contract), method: :patch, local: true, data: { turbo: false } do |f| %>
+                  <%= hidden_field_tag "contract[status]", "completed" %>
+                  <%= f.submit "Mark Complete", class: "btn btn-warning", data: { confirm: "Are you sure?" } %>
+                <% end %>
+                <%= progress_percent %>% Complete</div>
+            <% end %>
+          <% end %>
         <% end %>
-      <% else %>
-        <p class="text-muted"><em>You can review this client after the contract is completed.</em></p>
-      <% end %>
-    </div>
+        
+        <% if contract.completed? %>
+          <p><strong>Project:</strong> <%= contract.project.title %></p>
+          <p><strong>Freelancer:</strong> <%= contract.freelancer.name %></p>
+          <p><strong>Status:</strong> <%= contract.status.humanize %></p>
+          <div class="review-section">
+            <!-- Client Review -->
+            <h5>Client's Review for Freelancer</h5>
+            <% client_review = contract.project.reviews.find_by(reviewer_id: contract.client_id) %>
+            <% if client_review.present? %>
+              <div class="review-card" style="border-left: 5px solid <%= contract.completed? ? '#4caf50' : '#2196f3' %>;">
+                <em><p>
+                  <% filled_stars = '⭐' * client_review.ratings %>
+                  <% empty_stars = '☆' * (5 - client_review.ratings) %>
+                  <%= filled_stars + empty_stars %> - <%= client_review.review %>
+                </p></em>
+              </div>
+            <% else %>
+              <% if current_user.id == contract.client_id %>
+                <div id="client-review-section-<%= contract.id %>" data-reviewee-id="<%= contract.freelancer_id %>" data-project-id="<%= contract.project_id %>" data-reviewer-id="<%= current_user.id %>"></div>
+              <% end %>
+            <% end %>
+
+            <!-- Freelancer Review -->
+            <h5>Freelancer's Review for Client</h5>
+            <% freelancer_review = contract.project.reviews.find_by(reviewer_id: contract.freelancer_id) %>
+            <% if freelancer_review.present? %>
+              <div class="review-card" style="border-left: 5px solid <%= contract.completed? ? '#4caf50' : '#2196f3' %>;">
+                <em><p>
+                  <% filled_stars = '⭐' * freelancer_review.ratings %>
+                  <% empty_stars = '☆' * (5 - freelancer_review.ratings) %>
+                  <%= filled_stars + empty_stars %> - <%= freelancer_review.review %>
+                </p></em>
+              </div>
+
+            <% else %>
+              <% if current_user.id == contract.freelancer_id %>
+                <div id="freelancer-review-section-<%= contract.id %>" 
+                  data-reviewee-id="<%= contract.client_id %>" 
+                  data-project-id="<%= contract.project_id %>" 
+                  data-reviewer-id="<%= current_user.id %>"></div>
+              <% else %>
+                <p>No review has been given yet.</p>
+              <% end %>
+            <% end %>
+          </div>
+        <% end %>
+      </div>
   <% end %>
 <% else %>
   <p>No contracts found.</p>
 <% end %>
 
+<%= javascript_include_tag "https://cdn.jsdelivr.net/npm/sweetalert2@11" %>
 <script>
   document.addEventListener("DOMContentLoaded", () => {
     const alert = document.querySelector('.alert');
@@ -46,4 +106,90 @@
       }, 3000);
     }
   });
+  
+  document.addEventListener("DOMContentLoaded", () => {
+  document.querySelectorAll('.wave-container').forEach(container => {
+    const progress = container.style.getPropertyValue('--progress');
+    container.style.width = progress;
+  });
+});
+
+  document.addEventListener("DOMContentLoaded", () => {
+    document.querySelectorAll('.progress-water-fill').forEach(bar => {
+      const width = bar.style.width;
+      bar.style.width = '0%';
+      setTimeout(() => {
+        bar.style.width = width;
+      }, 100);
+    });
+  });
 </script>
+<style>
+  .water-card {
+  position: relative;
+  width: 100%;
+  max-width: 1300px;
+  height: 200px;
+  background-color: #e0f7fa;
+  border-radius: 20px;
+  overflow: hidden;
+  margin-bottom: 20px;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+  opacity: 0.9;
+  transition: background-color 0.3s ease;
+  padding: 20px;
+}
+
+.wave-container {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  height: 100%;
+  width: var(--progress);
+  background: #4dd0e1;
+  overflow: hidden;
+  border-radius: 20px 0 0 20px;
+  transition: width 1s ease-in-out;
+}
+
+.wave {
+  position: absolute;
+  width: 200%;
+  height: 200%;
+  top: -100%;
+  background: url("data:image/svg+xml;utf8,\
+    <svg viewBox='0 0 120 28' xmlns='http://www.w3.org/2000/svg'>\
+      <path fill='%23ffffff' fill-opacity='0.6' d='M0,20 C30,10 90,30 120,20 L120,30 L0,30 Z'></path>\
+    </svg>") repeat-x;
+  background-size: 50% 100%;
+  animation: waveMove 4s linear infinite;
+  opacity: 0.6;
+}
+
+.wave.wave2 {
+  top: -90%;
+  animation-delay: -2s;
+  opacity: 0.4;
+}
+
+@keyframes waveMove {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-50%);
+  }
+}
+
+.progress-label {
+  position: absolute;
+  bottom: 10px;
+  left: 10px;
+  font-weight: bold;
+  color: #004d40;
+  z-index: 2;
+  padding: 5px 10px;
+}
+
+</style>
+

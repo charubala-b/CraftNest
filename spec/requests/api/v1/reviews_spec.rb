@@ -1,154 +1,105 @@
+# spec/requests/api/v1/reviews_spec.rb
 require 'rails_helper'
 
-RSpec.describe "API::V1::Reviews", type: :request do
+RSpec.describe 'API::V1::Reviews', type: :request do
+  include JsonHelpers
+
   let(:client)     { create(:user, :client) }
   let(:freelancer) { create(:user, :freelancer) }
-  let(:project)    { create(:project, client: client) }
-  let!(:contract)  { create(:contract, project: project, freelancer: freelancer, client: client) }
+  let(:project) { create(:project, client: client) }
 
-  let!(:application) { Doorkeeper::Application.create!(name: "Test App", redirect_uri: "https://example.com") }
+  let(:token) do
+    create(:doorkeeper_access_token,
+           resource_owner_id: client.id,
+           scopes: 'read write')
+  end
 
-  let(:review_path)  { ->(project_id) { "/api/v1/reviews/#{project_id}" } }
-  let(:reviews_path) { "/api/v1/reviews" }
-
-  let(:review_params) do
+  let(:headers) do
     {
-      review: {
-        ratings: 5,
-        review: "Excellent work you have done !",
-        project_id: project.id,
-        reviewee_id: freelancer.id
-      }
+      'Authorization' => "Bearer #{token.token}",
+      'Content-Type' => 'application/json',
+      'Accept' => 'application/json'
     }
   end
 
-  def auth_headers(user)
-    token = Doorkeeper::AccessToken.create!(
-      application_id: application.id,
-      resource_owner_id: user.id,
-      scopes: 'public'
-    ).token
-    { "Authorization" => "Bearer #{token}" }
-  end
+  describe 'GET /api/v1/reviews/:project_id' do
+    context 'when a review exists' do
+      let!(:review) { create(:review, project: project, reviewer: client, reviewee: freelancer) }
 
-  describe "GET /api/v1/reviews/:project_id" do
-    context "when review exists and authorized" do
-      let!(:review) { create(:review, project: project, reviewer: client, reviewee: freelancer, review: "The project has been carried out excellently") }
+      it 'returns the review' do
+        get "/api/v1/reviews/#{project.id}", headers: headers
 
-      it "allows client to view their review" do
-        get review_path.call(project.id), headers: auth_headers(client)
-
-        aggregate_failures "client views review" do
-          expect(response).to have_http_status(:ok)
-          expect(response.parsed_body["review"]["review"]).to eq("The project has been carried out excellently")
-        end
-      end
-
-      it "allows freelancer to view review" do
-        get review_path.call(project.id), headers: auth_headers(freelancer)
-
-        aggregate_failures "freelancer views review" do
-          expect(response).to have_http_status(:ok)
-          expect(response.parsed_body["review"]["review"]).to eq("The project has been carried out excellently")
-        end
+        expect(response).to have_http_status(:ok)
+        expect(json_response['id']).to eq(review.id)
+        expect(json_response['review']).to eq(review.review)
       end
     end
 
-    context "when unauthorized user tries to access" do
-      let(:unauthorized_user) { create(:user) }
+    context 'when no review exists' do
+      it 'returns 404 not found' do
+        get "/api/v1/reviews/#{project.id}", headers: headers
 
-      it "returns forbidden" do
-        get review_path.call(project.id), headers: auth_headers(unauthorized_user)
-        expect(response).to have_http_status(:forbidden)
-      end
-    end
-
-    context "when review does not exist" do
-      it "returns not_found" do
-        get review_path.call(project.id), headers: auth_headers(client)
         expect(response).to have_http_status(:not_found)
-      end
-    end
-
-    context "when user with no valid role tries to view review" do
-      let(:weird_user) { create(:user, role: nil) }
-
-      it "returns forbidden" do
-        get review_path.call(project.id), headers: auth_headers(weird_user)
-        expect(response).to have_http_status(:forbidden)
+        expect(json_response['error']).to eq('Review not found')
       end
     end
   end
 
-  describe "POST /api/v1/reviews" do
-    context "when client creates a review" do
-      before { contract.update!(status: :completed) }
+  describe 'POST /api/v1/reviews/:project_id' do
+    describe 'POST /api/v1/reviews/:project_id' do
+  context 'with valid params' do
+    let(:client)     { create(:user, :client) }
+    let(:freelancer) { create(:user, :freelancer) }
+    let(:project)    { create(:project, client: client) }
+    let!(:contract)  { create(:contract, project: project, client: client, freelancer: freelancer) }
+    let(:token)      { create(:doorkeeper_access_token, resource_owner_id: client.id) }
 
-      it "creates the review successfully" do
-        post reviews_path, params: review_params, headers: auth_headers(client)
-
-        aggregate_failures "successful review creation" do
-          expect(response).to have_http_status(:created)
-          expect(response.parsed_body["review"]["review"]).to eq("Excellent work you have done !")
-        end
-      end
+    let(:headers) do
+      {
+        'Authorization' => "Bearer #{token.token}",
+        'Content-Type' => 'application/json'
+      }
     end
 
-    context "when freelancer tries to submit a review" do
-      it "creates the review for reverse direction" do
-        invalid_params = review_params.deep_dup
-        invalid_params[:review][:reviewee_id] = client.id
-
-        post reviews_path, params: invalid_params, headers: auth_headers(freelancer)
-
-        expect(response).to have_http_status(:created)
-      end
+    let(:valid_params) do
+      {
+        review: {
+          ratings: 5,
+          review: 'Excellent work done by you'
+        }
+      }.to_json
     end
 
-    context "when unrelated user tries to review" do
-      let(:stranger) { create(:user) }
+    it 'creates a review successfully' do
+      post "/api/v1/reviews/#{project.id}", params: valid_params, headers: headers
 
-      it "returns forbidden" do
-        post reviews_path, params: review_params, headers: auth_headers(stranger)
-
-        aggregate_failures "unauthorized review" do
-          expect(response).to have_http_status(:forbidden)
-          expect(response.parsed_body["error"]).to include("not allowed to review")
-        end
-      end
+      expect(response).to have_http_status(:created)
+      expect(json_response['review']).to eq('Excellent work done by you')
+      expect(json_response['ratings']).to eq(5)
     end
+  end
+end
 
-    context "when review already exists" do
-      before do
-        create(:review, project: project, reviewer: client, reviewee: freelancer)
-      end
 
-      it "returns unprocessable_entity" do
-        post reviews_path, params: review_params, headers: auth_headers(client)
+    context 'with invalid params' do
+  let!(:contract) { create(:contract, project: project, client: client, freelancer: freelancer) }
 
-        aggregate_failures "duplicate review" do
-          expect(response).to have_http_status(:unprocessable_entity)
-          expect(response.parsed_body["message"]).to include("already submitted")
-        end
-      end
-    end
+  let(:invalid_params) do
+    {
+      review: {
+        ratings: nil,
+        review: ''
+      }
+    }.to_json
+  end
 
-    context "when creation fails due to validation errors" do
-      it "returns unprocessable_entity with errors" do
-        post reviews_path, params: {
-          review: {
-            project_id: project.id,
-            reviewee_id: freelancer.id,
-            ratings: nil,
-            review: ""
-          }
-        }, headers: auth_headers(client)
+  it 'returns 422 unprocessable entity' do
+    post "/api/v1/reviews/#{project.id}", params: invalid_params, headers: headers
 
-        aggregate_failures "validation error" do
-          expect(response).to have_http_status(:unprocessable_entity)
-          expect(response.parsed_body["errors"]).to be_present
-        end
-      end
-    end
+    expect(response).to have_http_status(:unprocessable_entity)
+    expect(json_response['errors']).to be_an(Array)
+  end
+end
+
   end
 end

@@ -1,22 +1,35 @@
-<div id="flash-messages" class="position-fixed top-0 end-0 p-3" style="z-index: 1050;">
+<!-- 🔔 Flash Messages -->
+<div id="flash-messages" class="position-fixed top-0 end-0 p-3" style="z-index: 1050; width: 350px;">
   <% flash.each do |key, message| %>
-    <div class="alert alert-<%= key == "notice" ? "success" : "danger" %> alert-dismissible fade show" role="alert">
+    <div class="alert alert-<%= key == "notice" ? "success" : "danger" %> alert-dismissible fade show shadow" role="alert" style="font-weight: 500;">
       <%= message %>
       <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
     </div>
   <% end %>
 </div>
 
+<!-- 📝 Edit Bid Form -->
+<div class="container mt-5" style="max-width: 600px; background: #f8f9fa; padding: 30px; border-radius: 15px; box-shadow: 0 4px 10px rgba(0,0,0,0.1);">
+  <h2 class="mb-4 text-center text-primary">Edit Bid for <%= @project.title %></h2>
 
-<h2>Edit Bid for <%= @project.title %></h2>
+  <%= form_with model: [@project, @bid], local: true, data: { turbo: false } do |f| %>
+    <div class="mb-3">
+      <%= f.label :cover_letter, "Cover Letter", class: "form-label fw-bold" %>
+      <%= f.text_area :cover_letter, placeholder: "Update your cover letter", class: "form-control", rows: 5, style: "resize: vertical;" %>
+    </div>
 
-<%= form_with model: [@project, @bid], local: true , data: {turbo: false} do |f| %>
-  <%= f.text_area :cover_letter, placeholder: "Update your cover letter" %>
-  <%= f.number_field :proposed_price, placeholder: "New proposed price" %>
-  <%= f.submit "Update Bid", class: "btn btn-primary" %>
-<% end %>
+    <div class="mb-3">
+      <%= f.label :proposed_price, "Proposed Price (₹)", class: "form-label fw-bold" %>
+      <%= f.number_field :proposed_price, placeholder: "New proposed price", class: "form-control" %>
+    </div>
 
+    <div class="text-center">
+      <%= f.submit "Update Bid", class: "btn btn-success px-4 py-2" %>
+    </div>
+  <% end %>
+</div>
 
+<!-- ⏱️ Auto Dismiss Flash -->
 <script>
   document.addEventListener("DOMContentLoaded", () => {
     const alert = document.querySelector('.alert');

@@ -1,4 +1,5 @@
 class User < ApplicationRecord
+  include EmailDowncaseable
   include Ransackable
   devise :database_authenticatable, :registerable,
        :recoverable, :rememberable, :validatable,

@@ -8,9 +8,7 @@ class BidsController < ApplicationController
     @bid = Bid.find_by(id: params[:id])
     return redirect_to dashboard_path, alert: "Bid not found." unless @bid
 
-    ActiveRecord::Base.transaction do
-      @bid.update!(accepted: true)
-    end
+    @bid.update!(accepted: true)
 
     redirect_to dashboard_path, notice: "Bid accepted and contract created."
   rescue ActiveRecord::RecordInvalid => e

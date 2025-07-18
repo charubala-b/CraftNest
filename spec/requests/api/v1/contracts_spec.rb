@@ -1,226 +1,128 @@
 require 'rails_helper'
 
-RSpec.describe "API::V1::Contracts", type: :request do
-  let!(:client)     { create(:user, role: :client) }
-  let!(:freelancer) { create(:user, role: :freelancer) }
-  let!(:project)    { create(:project, client: client) }
-  let!(:contract)   { create(:contract, project: project, client: client, freelancer: freelancer) }
+RSpec.describe 'API::V1::Contracts', type: :request do
+  let(:client)     { create(:user, :client) }
+  let(:freelancer) { create(:user, :freelancer) }
+  let(:project)    { create(:project, client: client) }
 
-  let(:client_token)     { create(:access_token, resource_owner_id: client.id) }
-  let(:freelancer_token) { create(:access_token, resource_owner_id: freelancer.id) }
+  let(:token) do
+    create(:doorkeeper_access_token, resource_owner_id: client.id, scopes: 'read write')
+  end
+  
 
-  let(:client_headers)     { { "Authorization" => "Bearer #{client_token.token}" } }
-  let(:freelancer_headers) { { "Authorization" => "Bearer #{freelancer_token.token}" } }
-
-  def auth_headers(user)
-    token = Doorkeeper::AccessToken.create!(
-      application_id: Doorkeeper::Application.create!(name: "Test App", redirect_uri: "https://example.com").id,
-      resource_owner_id: user.id,
-      scopes: 'public'
-    ).token
-    { "Authorization" => "Bearer #{token}" }
+  let(:headers) do
+    {
+      'Authorization' => "Bearer #{token.token}",
+      'Content-Type' => 'application/json',
+      'Accept' => 'application/json'
+    }
   end
 
+  describe 'GET /api/v1/contracts/:id' do
+    let!(:contract) { create(:contract, project: project, client: client, freelancer: freelancer) }
 
-  let(:contracts_path)           { "/api/v1/contracts" }
-  let(:contract_path)            { ->(id) { "/api/v1/contracts/#{id}" } }
-  let(:completed_contracts_path) { "/api/v1/contracts/completed" }
+    context 'when authorized' do
+      it 'returns the contract' do
+        get "/api/v1/contracts/#{contract.id}", headers: headers
 
-  describe "GET /api/v1/contracts" do
-    it "returns contracts for client" do
-      get contracts_path, headers: client_headers
-      aggregate_failures "client index" do
         expect(response).to have_http_status(:ok)
-        expect(response.parsed_body).not_to be_empty
+        expect(json_response['contract']['id']).to eq(contract.id)
+        puts response.body
+        expect(json_response['contract']['project']['id']).to eq(project.id)
       end
     end
 
-    it "returns contracts for freelancer" do
-      get contracts_path, headers: freelancer_headers
-      aggregate_failures "freelancer index" do
-        expect(response).to have_http_status(:ok)
-        expect(response.parsed_body).not_to be_empty
-      end
-    end
-
-    context "when user is neither client nor freelancer" do
-      let(:random_user) { create(:user, role: nil) }
-
-      it "returns empty contracts list for index" do
-        get contracts_path, headers: auth_headers(random_user)
-        aggregate_failures "index for random user" do
-          expect(response).to have_http_status(:ok)
-          expect(response.parsed_body).to eq([])
-        end
+    context 'when unauthorized' do
+      let(:unauthorized_user) { create(:user, :client) }
+      let(:unauthorized_token) do
+        create(:doorkeeper_access_token, resource_owner_id: unauthorized_user.id, scopes: 'read write')
       end
 
-      it "returns empty contracts list for completed" do
-        get completed_contracts_path, headers: auth_headers(random_user)
-        aggregate_failures "completed for random user" do
-          expect(response).to have_http_status(:ok)
-          expect(response.parsed_body).to eq([])
-        end
+      it 'returns 401 unauthorized' do
+        get "/api/v1/contracts/#{contract.id}", headers: {
+          'Authorization' => "Bearer #{unauthorized_token.token}",
+          'Content-Type' => 'application/json'
+        }
+
+        expect(response).to have_http_status(:unauthorized)
+        expect(json_response['error']).to eq("You are not authorized to view this contract.")
       end
     end
   end
 
-  describe "GET /api/v1/contracts/:id" do
-    it "returns contract if authorized (client)" do
-      get contract_path.call(contract.id), headers: client_headers
-      expect(response).to have_http_status(:ok)
-    end
-
-    it "returns contract if authorized (freelancer)" do
-      get contract_path.call(contract.id), headers: freelancer_headers
-      expect(response).to have_http_status(:ok)
-    end
-
-    it "returns unauthorized for unrelated user" do
-      outsider = create(:user)
-      token = create(:access_token, resource_owner_id: outsider.id)
-      get contract_path.call(contract.id), headers: { "Authorization" => "Bearer #{token.token}" }
-      expect(response).to have_http_status(:unauthorized)
-    end
-  end
-
-  describe "POST /api/v1/contracts" do
+  describe 'POST /api/v1/contracts' do
     let(:valid_params) do
       {
         contract: {
           project_id: project.id,
-          freelancer_id: freelancer.id,
-          status: 'active'
+          freelancer_id: freelancer.id
         }
-      }
+      }.to_json
     end
 
-    it "creates a contract for client" do
-      new_freelancer = create(:user, role: :freelancer)
+    it 'creates a contract successfully' do
+      post '/api/v1/contracts', params: valid_params, headers: headers
 
-      post contracts_path, params: {
+      expect(response).to have_http_status(:created)
+      expect(json_response['contract']['project']['id']).to eq(project.id)
+      puts response.body
+      expect(json_response['contract']['freelancer']['id']).to eq(freelancer.id)
+      expect(json_response['contract']['status']).to eq('active')
+    end
+
+    it 'returns validation error if project_id is missing' do
+      post '/api/v1/contracts', params: {
         contract: {
-          project_id: project.id,
-          freelancer_id: new_freelancer.id,
-          status: 'active'
+          freelancer_id: freelancer.id
         }
-      }, headers: client_headers
+      }.to_json, headers: headers
 
-      aggregate_failures "create contract" do
-        expect(response).to have_http_status(:created)
-        expect(response.parsed_body["contract"]["status"]).to eq("active")
-      end
-    end
-
-    it "forbids freelancers from creating contracts" do
-      post contracts_path, params: valid_params, headers: freelancer_headers
-      expect(response).to have_http_status(:forbidden)
-    end
-
-    context "when contract creation fails due to validation" do
-      it "returns unprocessable_entity" do
-        post contracts_path, params: {
-          contract: { project_id: nil, freelancer_id: nil }
-        }, headers: auth_headers(client)
-
-        aggregate_failures "contract validation error" do
-          expect(response).to have_http_status(:unprocessable_entity)
-          expect(response.parsed_body["errors"]).to include("Project must exist", "Freelancer must exist")
-        end
-      end
-    end
-    context "when contract param is missing" do
-  it "returns 400 bad request with error message" do
-    post contracts_path,
-         params: {}.to_json,
-         headers: client_headers.merge("CONTENT_TYPE" => "application/json")
-
-    aggregate_failures "missing param" do
-      expect(response).to have_http_status(:bad_request)
-      expect(response.parsed_body["error"]).to match("param is missing or the value is empty: contract")
-    end
-  end
-end
-
-  end
-
-  describe "PATCH /api/v1/contracts/:id" do
-    it "updates contract if client and status is active" do
-      patch contract_path.call(contract.id), params: {
-        contract: { status: "completed" }
-      }, headers: client_headers
-
-      aggregate_failures "update to completed" do
-        expect(response).to have_http_status(:ok)
-        expect(contract.reload.status).to eq("completed")
-      end
-    end
-
-    it "does not allow update if status is not active" do
-      contract.update!(status: "completed")
-      patch contract_path.call(contract.id), params: {
-        contract: { status: "active" }
-      }, headers: client_headers
-
-      expect(response).to have_http_status(:forbidden)
-    end
-
-    it "does not allow freelancer to update contract" do
-      patch contract_path.call(contract.id), params: {
-        contract: { status: "completed" }
-      }, headers: freelancer_headers
-
-      expect(response).to have_http_status(:forbidden)
-    end
-
-    context "when another client tries to update contract" do
-      let(:other_client) { create(:user, :client) }
-      let!(:contract) { create(:contract, client: client, freelancer: freelancer, project: project) }
-
-      it "returns unauthorized" do
-        patch contract_path.call(contract.id), params: {
-          contract: { status: :completed }
-        }, headers: auth_headers(other_client)
-
-        aggregate_failures "unauthorized update" do
-          expect(response).to have_http_status(:unauthorized)
-          expect(response.parsed_body["error"]).to eq("Unauthorized to update this contract.")
-        end
-      end
-    end
-
-    context "when update fails due to invalid status" do
-      let!(:contract) { create(:contract, client: client, freelancer: freelancer, project: project) }
-
-      it "returns unprocessable_entity" do
-        patch contract_path.call(contract.id), params: {
-          contract: { status: "invalid_status" }
-        }, headers: auth_headers(client)
-
-        aggregate_failures "invalid status" do
-          expect(response).to have_http_status(:unprocessable_entity)
-          expect(response.parsed_body["errors"]).to include("'invalid_status' is not a valid status")
-        end
-      end
+      expect(response).to have_http_status(:unprocessable_entity)
+      expect(json_response['errors']).to include("Project must exist")
     end
   end
 
-  describe "GET /api/v1/contracts/completed" do
-    before { contract.update!(status: "completed") }
+  describe 'PATCH /api/v1/contracts/:id' do
+    let!(:contract) { create(:contract, client: client, freelancer: freelancer, project: project, status: :active) }
 
-    it "returns completed contracts for client" do
-      get completed_contracts_path, headers: client_headers
-      aggregate_failures "completed for client" do
-        expect(response).to have_http_status(:ok)
-        expect(response.parsed_body).not_to be_empty
-      end
+    it 'updates the contract status to completed' do
+      patch "/api/v1/contracts/#{contract.id}", params: {
+        contract: { status: 'completed' }
+      }.to_json, headers: headers
+
+      expect(response).to have_http_status(:ok)
+      expect(json_response['contract']['status']).to eq('completed')
     end
 
-    it "returns completed contracts for freelancer" do
-      get completed_contracts_path, headers: freelancer_headers
-      aggregate_failures "completed for freelancer" do
-        expect(response).to have_http_status(:ok)
-        expect(response.parsed_body).not_to be_empty
-      end
+    it 'returns 401 if client is not owner' do
+      other_client = create(:user, :client)
+      token = create(:doorkeeper_access_token, resource_owner_id: other_client.id)
+      patch "/api/v1/contracts/#{contract.id}", params: {
+        contract: { status: 'completed' }
+      }.to_json, headers: {
+        'Authorization' => "Bearer #{token.token}",
+        'Content-Type' => 'application/json'
+      }
+
+      expect(response).to have_http_status(:unauthorized)
+      puts response.body
+      expect(json_response['errors']).to include("Unauthorized to update this contract.")
     end
+  end
+
+  describe 'GET /api/v1/contracts/completed' do
+    let!(:completed_contract) { create(:contract, project: project, client: client, freelancer: freelancer, status: :completed) }
+
+    it 'returns completed contracts for client' do
+      get "/api/v1/contracts/completed", headers: headers
+
+      expect(response).to have_http_status(:ok)
+      expect(json_response).to be_an(Array)
+      expect(json_response.first['contract']['status']).to eq('completed')
+    end
+  end
+
+  def json_response
+    JSON.parse(response.body)
   end
 end

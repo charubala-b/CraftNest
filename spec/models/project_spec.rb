@@ -52,13 +52,15 @@ RSpec.describe Project, type: :model do
       expect(assoc.options[:dependent]).to eq(:destroy)
     end
 
-    it "has many reviews", association: :reviews do
-      expect(assoc.macro).to eq(:has_many)
-    end
+  it 'has many review' do
+    assoc = described_class.reflect_on_association(:reviews)
+    expect(assoc.macro).to eq(:has_many)
+  end
 
-    it "reviews are dependent destroy", association: :reviews do
-      expect(assoc.options[:dependent]).to eq(:destroy)
-    end
+  it 'review is dependent destroy' do
+    assoc = described_class.reflect_on_association(:reviews)
+    expect(assoc.options[:dependent]).to eq(:destroy)
+  end
 
     it "has many skill_assignments", association: :skill_assignments do
       expect(assoc.macro).to eq(:has_many)
