@@ -8,7 +8,6 @@ RSpec.describe 'API::V1::Contracts', type: :request do
   let(:token) do
     create(:doorkeeper_access_token, resource_owner_id: client.id, scopes: 'read write')
   end
-  
 
   let(:headers) do
     {
@@ -25,10 +24,11 @@ RSpec.describe 'API::V1::Contracts', type: :request do
       it 'returns the contract' do
         get "/api/v1/contracts/#{contract.id}", headers: headers
 
-        expect(response).to have_http_status(:ok)
-        expect(json_response['contract']['id']).to eq(contract.id)
-        puts response.body
-        expect(json_response['contract']['project']['id']).to eq(project.id)
+        aggregate_failures 'checking user authorization' do
+          expect(response).to have_http_status(:ok)
+          expect(json_response['contract']['id']).to eq(contract.id)
+          expect(json_response['contract']['project']['id']).to eq(project.id)
+        end
       end
     end
 
@@ -44,8 +44,10 @@ RSpec.describe 'API::V1::Contracts', type: :request do
           'Content-Type' => 'application/json'
         }
 
-        expect(response).to have_http_status(:unauthorized)
-        expect(json_response['error']).to eq("You are not authorized to view this contract.")
+        aggregate_failures 'unauthorized access' do
+          expect(response).to have_http_status(:unauthorized)
+          expect(json_response['error']).to eq("You are not authorized to view this contract.")
+        end
       end
     end
   end
@@ -63,11 +65,12 @@ RSpec.describe 'API::V1::Contracts', type: :request do
     it 'creates a contract successfully' do
       post '/api/v1/contracts', params: valid_params, headers: headers
 
-      expect(response).to have_http_status(:created)
-      expect(json_response['contract']['project']['id']).to eq(project.id)
-      puts response.body
-      expect(json_response['contract']['freelancer']['id']).to eq(freelancer.id)
-      expect(json_response['contract']['status']).to eq('active')
+      aggregate_failures 'creating the contract' do
+        expect(response).to have_http_status(:created)
+        expect(json_response['contract']['project']['id']).to eq(project.id)
+        expect(json_response['contract']['freelancer']['id']).to eq(freelancer.id)
+        expect(json_response['contract']['status']).to eq('active')
+      end
     end
 
     it 'returns validation error if project_id is missing' do
@@ -77,8 +80,10 @@ RSpec.describe 'API::V1::Contracts', type: :request do
         }
       }.to_json, headers: headers
 
-      expect(response).to have_http_status(:unprocessable_entity)
-      expect(json_response['errors']).to include("Project must exist")
+      aggregate_failures 'validating project attributes' do
+        expect(response).to have_http_status(:unprocessable_entity)
+        expect(json_response['errors']).to include("Project must exist")
+      end
     end
   end
 
@@ -90,23 +95,27 @@ RSpec.describe 'API::V1::Contracts', type: :request do
         contract: { status: 'completed' }
       }.to_json, headers: headers
 
-      expect(response).to have_http_status(:ok)
-      expect(json_response['contract']['status']).to eq('completed')
+      aggregate_failures 'updating contract status' do
+        expect(response).to have_http_status(:ok)
+        expect(json_response['contract']['status']).to eq('completed')
+      end
     end
 
     it 'returns 401 if client is not owner' do
       other_client = create(:user, :client)
-      token = create(:doorkeeper_access_token, resource_owner_id: other_client.id)
+      other_token = create(:doorkeeper_access_token, resource_owner_id: other_client.id)
+
       patch "/api/v1/contracts/#{contract.id}", params: {
         contract: { status: 'completed' }
       }.to_json, headers: {
-        'Authorization' => "Bearer #{token.token}",
+        'Authorization' => "Bearer #{other_token.token}",
         'Content-Type' => 'application/json'
       }
 
-      expect(response).to have_http_status(:unauthorized)
-      puts response.body
-      expect(json_response['errors']).to include("Unauthorized to update this contract.")
+      aggregate_failures 'validating client authorization' do
+        expect(response).to have_http_status(:unauthorized)
+        expect(json_response['errors']).to include("Unauthorized to update this contract.")
+      end
     end
   end
 
@@ -116,9 +125,11 @@ RSpec.describe 'API::V1::Contracts', type: :request do
     it 'returns completed contracts for client' do
       get "/api/v1/contracts/completed", headers: headers
 
-      expect(response).to have_http_status(:ok)
-      expect(json_response).to be_an(Array)
-      expect(json_response.first['contract']['status']).to eq('completed')
+      aggregate_failures 'getting completed contracts' do
+        expect(response).to have_http_status(:ok)
+        expect(json_response).to be_an(Array)
+        expect(json_response.first['contract']['status']).to eq('completed')
+      end
     end
   end
 

@@ -18,16 +18,19 @@ RSpec.describe 'API::V1::Projects', type: :request do
     }
   end
 
+  let(:base_url) { '/api/v1/projects' }
+
   describe 'GET /api/v1/projects' do
     before do
       create_list(:project, 2, client: client)
     end
 
     it 'returns projects owned by client' do
-      get '/api/v1/projects', headers: headers
-
-      expect(response).to have_http_status(:ok)
-      expect(json_response.size).to eq(2)
+      get base_url, headers: headers
+      aggregate_failures 'getting projects' do
+        expect(response).to have_http_status(:ok)
+        expect(json_response.size).to eq(2)
+      end
     end
   end
 
@@ -46,10 +49,11 @@ RSpec.describe 'API::V1::Projects', type: :request do
 
     context 'with valid parameters' do
       it 'creates a project' do
-        post '/api/v1/projects', params: valid_params, headers: headers
-
-        expect(response).to have_http_status(:created)
-        expect(json_response['project']['title']).to eq('New Freelance Project Title')
+        post base_url, params: valid_params, headers: headers
+        aggregate_failures 'validating project attributes' do
+          expect(response).to have_http_status(:created)
+          expect(json_response['project']['title']).to eq('New Freelance Project Title')
+        end
       end
     end
 
@@ -66,10 +70,11 @@ RSpec.describe 'API::V1::Projects', type: :request do
       end
 
       it 'returns 422 with validation error' do
-        post '/api/v1/projects', params: invalid_params, headers: headers
-
-        expect(response).to have_http_status(:unprocessable_entity)
-        expect(json_response['errors']).to include("Budget must be a non-negative number")
+        post base_url, params: invalid_params, headers: headers
+        aggregate_failures 'validating unprocessible entity' do
+          expect(response).to have_http_status(:unprocessable_entity)
+          expect(json_response['errors']).to include("Budget must be a non-negative number")
+        end
       end
     end
 
@@ -86,53 +91,59 @@ RSpec.describe 'API::V1::Projects', type: :request do
       end
 
       it 'returns 422 with validation messages' do
-        post '/api/v1/projects', params: invalid_params, headers: headers
-
-        expect(response).to have_http_status(:unprocessable_entity)
-        expect(json_response['errors']).to include("Title can't be blank", "Description can't be blank")
+        post base_url, params: invalid_params, headers: headers
+        aggregate_failures 'validating messages' do
+          expect(response).to have_http_status(:unprocessable_entity)
+          expect(json_response['errors']).to include("Title can't be blank", "Description can't be blank")
+        end
       end
     end
   end
 
   describe 'PATCH /api/v1/projects/:id' do
     let!(:project) { create(:project, client: client) }
+    let(:update_url) { "#{base_url}/#{project.id}" }
 
     it 'updates project with valid data' do
-      patch "/api/v1/projects/#{project.id}", params: {
+      patch update_url, params: {
         project: { title: 'Updated Project Title' }
       }.to_json, headers: headers
-
-      expect(response).to have_http_status(:ok)
-      expect(json_response['project']['title']).to eq('Updated Project Title')
+      aggregate_failures 'updating project title' do
+        expect(response).to have_http_status(:ok)
+        expect(json_response['project']['title']).to eq('Updated Project Title')
+      end
     end
 
     context 'with invalid data' do
       it 'returns validation error for empty title' do
-        patch "/api/v1/projects/#{project.id}", params: {
+        patch update_url, params: {
           project: { title: '' }
         }.to_json, headers: headers
-
-        expect(response).to have_http_status(:unprocessable_entity)
-        expect(json_response['errors']).to include("Title can't be blank")
+        aggregate_failures 'validating project attributes' do
+          expect(response).to have_http_status(:unprocessable_entity)
+          expect(json_response['errors']).to include("Title can't be blank")
+        end
       end
 
       it 'returns validation error for negative budget' do
-        patch "/api/v1/projects/#{project.id}", params: {
+        patch update_url, params: {
           project: { budget: -100 }
         }.to_json, headers: headers
-
-        expect(response).to have_http_status(:unprocessable_entity)
-        expect(json_response['errors']).to include("Budget must be a non-negative number")
+        aggregate_failures 'validating project attributes' do
+          expect(response).to have_http_status(:unprocessable_entity)
+          expect(json_response['errors']).to include("Budget must be a non-negative number")
+        end
       end
     end
   end
 
   describe 'DELETE /api/v1/projects/:id' do
     let!(:project) { create(:project, client: client) }
+    let(:delete_url) { "#{base_url}/#{project.id}" }
 
     it 'deletes the project' do
       expect {
-        delete "/api/v1/projects/#{project.id}", headers: headers
+        delete delete_url, headers: headers
       }.to change(Project, :count).by(-1)
 
       expect(response).to have_http_status(:no_content)

@@ -46,7 +46,7 @@
             <% accepted_bid = project.bids.find_by(accepted: true) %>
             <% project.bids.ordered_by_price_asc.each do |bid| %>
               <div class="bid-card <%= 'accepted-card' if bid.accepted? %>">
-                <%= link_to '📈 View Analytics', freelancer_analytics_path(bid.user_id), class: "btn btn-info" %>
+                <%= link_to "📈 View #{bid.user.name} Analytics", freelancer_analytics_path(bid.user_id), class: "btn btn-info" %>
                 <p><strong>Freelancer:</strong> <%= bid.user.name %></p>
 
                 <% if bid.user.skills.any? %>
@@ -112,9 +112,12 @@
 
   <!-- Contracts Tab -->
   <div id="contracts" class="tab-content">
+  <h2 class="section-title">My Contracts</h2>
     <% @contracts.each do |contract| %>
-      <div class="<%= contract.completed? ? 'contract-card' : 'water-card' %>" style="background: <%= contract.completed? ? '#d1f7dc' : '#f0f5fb' %>; border-left: 5px solid <%= contract.completed? ? '#4caf50' : '#2196f3' %>;">
-        <% unless contract.completed? %>
+      <div class="<%= contract.completed? ? 'contract-card' : (contract.end_date < Date.today ? 'red-card' : 'water-card') %>"
+     style="background: <%= contract.completed? ? '#d1f7dc' : (contract.end_date < Date.today ? '#f7b7b7' : '#f0f5fb') %>; 
+            border-left: 5px solid <%= contract.completed? ? '#4caf50' : (contract.end_date < Date.today ? '#f22e14' : '#2196f3') %>;">
+        <% unless contract.completed? || contract.end_date < Date.today %>
           <% if contract.start_date.present? && contract.end_date.present? %>
             <% start_date = contract.start_date.to_date rescue nil %>
             <% end_date = contract.end_date.to_date rescue nil %>
@@ -140,7 +143,18 @@
             <% end %>
           <% end %>
         <% end %>
+        <% if !contract.completed? && contract.end_date < Date.today %>
         
+          <p><strong>Project:</strong> <%= contract.project.title %></p>
+          <p><strong>Freelancer:</strong> <%= contract.freelancer.name %></p>
+          <p><strong>Status:</strong> <%= contract.status.humanize %></p>
+          <p style="color: red; font-weight: bold;">Deadline has ended.</p>
+          <%= form_with url: contract_path(contract), method: :patch, local: true, data: { turbo: false } do |f| %>
+            <%= hidden_field_tag "contract[status]", "completed" %>
+            <%= f.submit "Mark Complete", class: "btn btn-warning", data: { confirm: "Are you sure?" } %>
+          <% end %>
+          
+        <% end %>
         <% if contract.completed? %>
           <p><strong>Project:</strong> <%= contract.project.title %></p>
           <p><strong>Freelancer:</strong> <%= contract.freelancer.name %></p>
@@ -158,9 +172,7 @@
                 </p></em>
               </div>
             <% else %>
-              <% if current_user.id == contract.client_id %>
-                <div id="client-review-section-<%= contract.id %>" data-reviewee-id="<%= contract.freelancer_id %>" data-project-id="<%= contract.project_id %>" data-reviewer-id="<%= current_user.id %>"></div>
-              <% end %>
+              <%= link_to "Write Review for freelancer", new_review_path(reviewee_id: contract.freelancer_id, project_id: contract.project_id), class: "btn btn-warning" %>
             <% end %>
 
             <!-- Freelancer Review -->
@@ -193,6 +205,7 @@
 
   <!-- Messages Tab -->
   <div id="messages" class="tab-content">
+  <h2 class="section-title">My Chats</h2>
     <div class="chat-list">
       <% @contracts.each do |contract| %>
         <% if contract.client_id == current_user.id %>
@@ -209,6 +222,7 @@
 
   <!-- Completed Projects Tab -->
   <div id="completed_projects" class="tab-content">
+  <h2 class="section-title">My Completed Projects</h2>
     <% @completed_projects.each do |project| %>
       <div class="project-card completed-card" style="background: #f0f5fb;">
         <h3><%= project.title %></h3>
@@ -466,6 +480,14 @@
   color: #004d40;
   z-index: 2;
   padding: 5px 10px;
+}
+
+.red-card {
+  padding: 24px;
+  margin-bottom: 24px;
+  border-radius: 10px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.04);
+  transition: box-shadow 0.3s ease;
 }
 
 </style>

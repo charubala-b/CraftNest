@@ -16,11 +16,17 @@ class ContractsController < ApplicationController
   def update
     if @contract.update(contract_params)
       flash[:notice] = "Contract marked as completed."
+
+      if @contract.status == "completed"
+        ReviewRemainderJob.perform_later(@contract.id)
+      end
     else
       flash[:alert] = "Failed to update contract."
     end
+
     redirect_to dashboard_path(anchor: 'contracts')
   end
+
 
   private
 

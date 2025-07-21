@@ -43,10 +43,6 @@ end
         @project = Project.find(params[:project_id])
       end
 
-      def authorize_client!
-        render json: { error: 'Unauthorized' }, status: :unauthorized unless @project.client_id == current_user_api&.id
-      end
-
       def review_params
         params.require(:review).permit(:ratings, :review)
       end

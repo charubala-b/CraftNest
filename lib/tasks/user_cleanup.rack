@@ -1,0 +1,8 @@
+namespace :users do
+  desc "Delete users who haven’t signed in for 6 months"
+  task cleanup: :environment do
+    old_users = User.where("last_sign_in_at < ?", 6.months.ago)
+    puts "Deleting #{old_users.count} old users..."
+    old_users.destroy_all
+  end
+end
