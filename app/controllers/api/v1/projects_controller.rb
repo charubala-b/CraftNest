@@ -96,12 +96,6 @@ module Api
           Skill.find_or_create_by(skill_name: skill_name.downcase).id
         end
       end
-
-      def authorize_client!
-        unless current_user_api&.client?
-          render json: { error: "Forbidden" }, status: :forbidden
-        end
-      end
     end
   end
 end

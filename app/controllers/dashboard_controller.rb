@@ -1,9 +1,7 @@
 class DashboardController < ApplicationController
   before_action :authenticate_user!
-  before_action :auto_complete_contracts, only: [:home]
 
   def home
-    # Use Devise's current_user
     
     completed_project_ids = Contract.where(status: :completed, client_id: current_user.id).pluck(:project_id)
 
@@ -36,14 +34,4 @@ class DashboardController < ApplicationController
     @new_message = Message.new
   end
 
-  private
-
-  def auto_complete_contracts
-    Contract.joins(:project)
-            .where(status: :active)
-            .where("end_date <= ?", Date.today)
-            .find_each do |contract|
-      contract.update(status: :completed)
-    end
-  end
 end

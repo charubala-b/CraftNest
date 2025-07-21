@@ -14,6 +14,7 @@
 <div class="dashboard-container">
   <!-- 🔹 Projects Tab -->
   <div id="projects" class="tab-content" style="display: block; ">
+  
     <div class="skill-filter mb-3">
       <%= form_with url: freelancer_dashboard_path, method: :get, local: true, data: { turbo: false }, html: { id: "skill-filter-form" } do |f| %>
         <div class="d-flex align-items-center">
@@ -31,6 +32,7 @@
     <% if @available_projects.empty? %>
       <p>No available projects at the moment.</p>
     <% end %>
+    <h2 class="section-title">The Projects</h2>
     <% @available_projects.each do |project| %>
       <div class="project-card" style="background: #f0f5fb;" >
         <h3><%= project.title %></h3>
@@ -85,6 +87,7 @@
 
   <!-- 🔹 My Bids Tab -->
   <div id="bids" class="tab-content">
+  <h2 class="section-title">My Bids</h2>
     <% if current_user.bids.empty? %>
       <p>You haven't placed any bids yet.</p>
     <% end %>
@@ -142,10 +145,14 @@
 
   <!-- 🔹 Contracts Tab -->
   <div id="contracts" class="tab-content">
+  <h2 class="section-title">My Contracts</h2>
     <% if @contracts.any? %>
   <% @contracts.each do |contract| %>
-    <div class="<%= contract.completed? ? 'contract-card' : 'water-card' %>" style="background: <%= contract.completed? ? '#d1f7dc' : '#f0f5fb' %>; border-left: 5px solid <%= contract.completed? ? '#4caf50' : '#2196f3' %>;">
-        <% unless contract.completed? %>
+    <div class="<%= contract.completed? ? 'contract-card' : (contract.end_date < Date.today ? 'red-card' : 'water-card') %>"
+     style="background: <%= contract.completed? ? '#d1f7dc' : (contract.end_date < Date.today ? '#f7b7b7' : '#f0f5fb') %>; 
+            border-left: 5px solid <%= contract.completed? ? '#4caf50' : (contract.end_date < Date.today ? '#f22e14' : '#2196f3') %>;">
+
+        <% unless contract.completed? || contract.end_date < Date.today %>
           <% if contract.start_date.present? && contract.end_date.present? %>
             <% start_date = contract.start_date.to_date rescue nil %>
             <% end_date = contract.end_date.to_date rescue nil %>
@@ -167,7 +174,14 @@
             <% end %>
           <% end %>
         <% end %>
+        <% if !contract.completed? && contract.end_date < Date.today %>
         
+          <p><strong>Project:</strong> <%= contract.project.title %></p>
+          <p><strong>Freelancer:</strong> <%= contract.freelancer.name %></p>
+          <p><strong>Status:</strong> <%= contract.status.humanize %></p>
+          <p style="color: red; font-weight: bold;">Deadline has ended.</p>
+          <p style="font-weight: bold;">Do your wrk until client mark as completed</p>
+        <% end %>
         <% if contract.completed? %>
           <p><strong>Project:</strong> <%= contract.project.title %></p>
           <p><strong>Freelancer:</strong> <%= contract.freelancer.name %></p>
@@ -214,6 +228,7 @@
 
   <!-- 🔹 Messages Tab -->
   <div id="messages" class="tab-content">
+  <h2 class="section-title">My Chats</h2>
     <% @contracts.each do |contract| %>
       <% if contract.freelancer_id == current_user.id %>
         <div class="chat-link-card">
@@ -227,6 +242,7 @@
 
   <!-- 🔹 Profile Tab -->
 <div id="profile" class="tab-content">
+<h2 class="section-title">My Profile</h2>
   <div class="profile-card" style="background-color: #82b4bf; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
     <% if current_user.freelancer? %>
   <div class="d-flex align-items-center mb-3" style="gap: 10px; background-color: #e7f1fb; padding: 10px; border-radius: 5px; widht: 30px; border: 1px solid #d1e7fd; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
@@ -469,4 +485,13 @@
   z-index: 2;
   padding: 5px 10px;
 }
+
+.red-card {
+  padding: 24px;
+  margin-bottom: 24px;
+  border-radius: 10px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.04);
+  transition: box-shadow 0.3s ease;
+}
+  
 </style>

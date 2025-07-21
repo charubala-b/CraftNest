@@ -21,17 +21,14 @@ gem "jbuilder"
 # gem "devise"
 # Gemfile
 
-# gem for pdf download
-gem 'prawn'
+
 #gem for authentication
 gem 'devise'
 #gem for admin access
 gem 'activeadmin'
 #gem for css
 gem 'sassc'
-#sign in with google
-gem 'omniauth'
-gem 'omniauth-google-oauth2'
+
 #gem for api
 gem 'rabl'
 
@@ -40,6 +37,11 @@ gem 'doorkeeper'
 
 gem "activestorage-validator"
 
+
+# gem for pdf download
+gem 'prawn'
+
+#gem for charts
 gem 'chartkick'
 gem 'groupdate'
 
@@ -84,6 +86,10 @@ group :development do
   # Use console on exceptions pages [https://github.com/rails/web-console]
   gem "web-console"
 end
+
+#sign in with google
+gem 'omniauth'
+gem 'omniauth-google-oauth2'
 
 group :test do
   # Use system testing [https://guides.rubyonrails.org/testing.html#system-testing]

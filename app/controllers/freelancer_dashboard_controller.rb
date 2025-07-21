@@ -10,7 +10,7 @@ class FreelancerDashboardController < ApplicationController
     base_projects = Project.where.not(id: bid_ids)
                            .where.not(id: contract_ids)
                            .where.not(id: accepted_ids)
-                           .where("deadline > ?", Date.today)
+                           .where("deadline >= ?", Date.today)
 
     @skills = Skill.all
     @available_projects = if params[:skill_id].present?

@@ -92,15 +92,5 @@ class Api::V1::BidsController < Api::V1::BaseController
     return render json: { error: "Bid not found." }, status: :not_found unless @bid
   end
 
-  def authorize_freelancer!
-    unless current_user_api&.freelancer?
-      render json: { error: "Forbidden: Only freelancers can perform this action." }, status: :forbidden
-    end
-  end
 
-  def authorize_client!
-    unless current_user_api&.client?
-      render json: { error: "Forbidden: Only clients can perform this action." }, status: :forbidden
-    end
-  end
 end

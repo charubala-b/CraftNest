@@ -79,16 +79,5 @@ class Api::V1::ContractsController < Api::V1::BaseController
   def handle_parameter_missing(exception)
     render json: { errors: [exception.message] }, status: :bad_request
   end
-
-  def authorize_client!
-    unless current_user_api&.client?
-      render json: { error: "Forbidden" }, status: :forbidden
-    end
-  end
   
-  def authorize_access_to_contract!(contract = @contract)
-    unless contract.client_id == current_user_api&.id || contract.freelancer_id == current_user_api&.id
-      render json: { error: 'You are not authorized to view this contract.' }, status: :unauthorized
-    end
-  end
 end
