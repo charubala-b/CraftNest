@@ -7,12 +7,11 @@ class Message < ApplicationRecord
   belongs_to :receiver, class_name: "User"
   belongs_to :project
 
-  validates :body, presence: true, length: { minimum: 2 , maximum: 100}
+  validates :body, presence: true, length: { minimum: 2, maximum: 100 }
 
 private
 
 def notify_receiver
    Rails.logger.info "Notified User ##{receiver_id} about new message ##{id}"
 end
-
 end

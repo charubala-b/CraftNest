@@ -63,7 +63,7 @@ RSpec.describe User, type: :model do
       assoc = described_class.reflect_on_association(:bid_projects)
       expect(assoc.options[:source]).to eq(:project)
     end
-    
+
     it "has many bid_projects through bids" do
       assoc = described_class.reflect_on_association(:bid_projects)
       expect(assoc.options[:through]).to eq(:bids)
@@ -224,5 +224,4 @@ RSpec.describe User, type: :model do
         expect(result).to include(user)
     end
   end
-
 end

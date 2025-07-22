@@ -3,8 +3,8 @@ class User < ApplicationRecord
   include Ransackable
   devise :database_authenticatable, :registerable,
        :recoverable, :rememberable, :validatable,
-       :omniauthable, omniauth_providers: [:google_oauth2]
- 
+       :omniauthable, omniauth_providers: [ :google_oauth2 ]
+
 
   before_save :downcase_email
 
@@ -34,7 +34,7 @@ class User < ApplicationRecord
 
   has_many :contracts_as_freelancer, class_name: "Contract", foreign_key: "freelancer_id", dependent: :destroy
 
-  
+
 
   ransacker :created_year do
     Arel.sql("EXTRACT(YEAR FROM users.created_at)::integer")
@@ -49,4 +49,3 @@ class User < ApplicationRecord
     self.email = email.downcase if email.present?
   end
 end
-

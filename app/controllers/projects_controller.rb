@@ -1,7 +1,7 @@
 class ProjectsController < ApplicationController
-  before_action :set_project, only: [:show, :edit, :update, :destroy]
+  before_action :set_project, only: [ :show, :edit, :update, :destroy ]
   before_action :require_client
-  before_action :set_skills, only: [:new, :edit, :create, :update]
+  before_action :set_skills, only: [ :new, :edit, :create, :update ]
   before_action :authenticate_user!
 
 
@@ -47,7 +47,7 @@ end
       new_skill_ids = process_new_skills(params[:new_skills])
       all_skill_ids = Array(params[:project][:skill_ids]).map(&:to_i) + new_skill_ids
       assign_skills(@project, all_skill_ids.uniq)
-      redirect_to dashboard_path, notice: 'Project updated successfully.'
+      redirect_to dashboard_path, notice: "Project updated successfully."
     else
       flash.now[:alert] = "Failed to update project."
       render :edit
@@ -92,7 +92,7 @@ end
   end
 
   def process_new_skills(raw_new_skills)
-    raw_new_skills.to_s.split(',').map(&:strip).reject(&:blank?).map do |skill_name|
+    raw_new_skills.to_s.split(",").map(&:strip).reject(&:blank?).map do |skill_name|
       Skill.find_or_create_by(skill_name: skill_name.downcase).id
     end
   end

@@ -6,7 +6,7 @@ class SkillAssignmentsController < ApplicationController
   if skill_id.present?
     skill = Skill.find_by(id: skill_id)
   elsif new_skill_name.present?
-    skill = Skill.where('LOWER(skill_name) = ?', new_skill_name.downcase).first_or_create(skill_name: new_skill_name)
+    skill = Skill.where("LOWER(skill_name) = ?", new_skill_name.downcase).first_or_create(skill_name: new_skill_name)
   end
 
   if skill

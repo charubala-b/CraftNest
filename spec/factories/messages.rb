@@ -6,4 +6,3 @@ FactoryBot.define do
         body { "what about the update?" }
     end
 end
-

@@ -9,8 +9,8 @@ class Comment < ApplicationRecord
   belongs_to :parent, class_name: "Comment", optional: true
   has_many :replies, class_name: "Comment", foreign_key: "parent_id", dependent: :destroy
 
-  validates :body, presence: true, length: { minimum: 20 , maximum: 100}
-  
+  validates :body, presence: true, length: { minimum: 20, maximum: 100 }
+
   private
 
   def notify_project_owner

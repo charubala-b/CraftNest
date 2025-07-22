@@ -3,4 +3,3 @@ class AddSkillableToSkills < ActiveRecord::Migration[7.2]
     add_reference :skills, :skillable, polymorphic: true, null: true
   end
 end
-

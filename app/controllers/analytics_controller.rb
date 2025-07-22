@@ -43,7 +43,6 @@ if @freelancer.nil?
   Rails.logger.debug "No freelancer found with that ID"
   redirect_to root_path, alert: "Freelancer not found" and return
 end
-
   end
 
   def authorize_client_or_freelancer!

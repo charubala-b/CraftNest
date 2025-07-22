@@ -82,8 +82,8 @@ RSpec.describe Bid, type: :model do
       let!(:expensive_bid) { create(:bid, proposed_price: 500) }
 
       it 'orders bids by proposed_price ascending' do
-        result = Bid.where(id: [cheap_bid.id, expensive_bid.id]).ordered_by_price_asc
-        expect(result).to eq([cheap_bid, expensive_bid])
+        result = Bid.where(id: [ cheap_bid.id, expensive_bid.id ]).ordered_by_price_asc
+        expect(result).to eq([ cheap_bid, expensive_bid ])
       end
     end
   end
