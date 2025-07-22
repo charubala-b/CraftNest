@@ -10,7 +10,7 @@ def show
   if review
     render json: review, status: :ok
   else
-    render json: { error: 'Review not found' }, status: :not_found
+    render json: { error: "Review not found" }, status: :not_found
   end
 end
 
@@ -18,7 +18,7 @@ end
 def create
   contract = Contract.find_by(project_id: @project.id)
   unless contract
-    return render json: { error: 'Contract not found for this project' }, status: :unprocessable_entity
+    return render json: { error: "Contract not found for this project" }, status: :unprocessable_entity
   end
 
   review = @project.reviews.build(

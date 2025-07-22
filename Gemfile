@@ -22,40 +22,40 @@ gem "jbuilder"
 # Gemfile
 
 
-#gem for authentication
-gem 'devise'
-#gem for admin access
-gem 'activeadmin'
-#gem for css
-gem 'sassc'
+# gem for authentication
+gem "devise"
+# gem for admin access
+gem "activeadmin"
+# gem for css
+gem "sassc"
 
-#gem for api
-gem 'rabl'
+# gem for api
+gem "rabl"
 
-#gem for api authentication
-gem 'doorkeeper'
+# gem for api authentication
+gem "doorkeeper"
 
 gem "activestorage-validator"
 
 
 # gem for pdf download
-gem 'prawn'
+gem "prawn"
 
-#gem for charts
-gem 'chartkick'
-gem 'groupdate'
+# gem for charts
+gem "chartkick"
+gem "groupdate"
 
 
-#gem for authentication
+# gem for authentication
 group :development, :test do
-  gem 'rspec-rails'
-  gem 'factory_bot_rails'
-  gem 'simplecov', require: false
-  gem 'faker'
-  gem 'byebug'
+  gem "rspec-rails"
+  gem "factory_bot_rails"
+  gem "simplecov", require: false
+  gem "faker"
+  gem "byebug"
 end
 
-gem 'kaminari'
+gem "kaminari"
 # Use Kredis to get higher-level data types in Redis [https://github.com/rails/kredis]
 # gem "kredis"
 
@@ -87,9 +87,9 @@ group :development do
   gem "web-console"
 end
 
-#sign in with google
-gem 'omniauth'
-gem 'omniauth-google-oauth2'
+# sign in with google
+gem "omniauth"
+gem "omniauth-google-oauth2"
 
 group :test do
   # Use system testing [https://guides.rubyonrails.org/testing.html#system-testing]
@@ -98,3 +98,8 @@ group :test do
 end
 
 gem "tailwindcss-rails", "~> 4.3"
+
+group :development, :test do
+  gem "rubocop", require: false
+  gem "rubocop-rails", require: false
+end

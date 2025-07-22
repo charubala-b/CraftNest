@@ -1,9 +1,9 @@
 class Api::V1::ContractsController < Api::V1::BaseController
   rescue_from ActionController::ParameterMissing, with: :handle_parameter_missing
 
-  before_action :set_contract, only: [:show, :update]
-  before_action :authorize_client!, only: [:create, :update]
-  before_action only: [:show] do
+  before_action :set_contract, only: [ :show, :update ]
+  before_action :authorize_client!, only: [ :create, :update ]
+  before_action only: [ :show ] do
   authorize_access_to_contract!(@contract)
   end
 
@@ -34,12 +34,12 @@ class Api::V1::ContractsController < Api::V1::BaseController
   end
 
   def update
-    if @contract.status != 'active'
-      return render json: { errors: ["Only active contracts can be updated."] }, status: :forbidden
+    if @contract.status != "active"
+      return render json: { errors: [ "Only active contracts can be updated." ] }, status: :forbidden
     end
 
     if @contract.client_id != current_user_api.id
-      return render json: { errors: ["Unauthorized to update this contract."] }, status: :unauthorized
+      return render json: { errors: [ "Unauthorized to update this contract." ] }, status: :unauthorized
     end
 
     if @contract.update(contract_params)
@@ -48,7 +48,7 @@ class Api::V1::ContractsController < Api::V1::BaseController
       render json: { errors: @contract.errors.full_messages }, status: :unprocessable_entity
     end
   rescue ArgumentError => e
-    render json: { errors: [e.message] }, status: :unprocessable_entity
+    render json: { errors: [ e.message ] }, status: :unprocessable_entity
   end
 
   def completed
@@ -69,7 +69,7 @@ class Api::V1::ContractsController < Api::V1::BaseController
 
   def set_contract
     @contract = Contract.includes(:project, :freelancer, :client).find_by(id: params[:id])
-    return render json: { errors: ["Contract not found"] }, status: :not_found unless @contract
+    render json: { errors: [ "Contract not found" ] }, status: :not_found unless @contract
   end
 
   def contract_params
@@ -77,7 +77,6 @@ class Api::V1::ContractsController < Api::V1::BaseController
   end
 
   def handle_parameter_missing(exception)
-    render json: { errors: [exception.message] }, status: :bad_request
+    render json: { errors: [ exception.message ] }, status: :bad_request
   end
-  
 end

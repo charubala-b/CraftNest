@@ -2,8 +2,8 @@ module Api
   module V1
     class ProjectsController < BaseController
       before_action :doorkeeper_authorize!
-      before_action :set_project, only: [:show, :update, :destroy]
-      before_action :authorize_client!, only: [:create, :update, :destroy]
+      before_action :set_project, only: [ :show, :update, :destroy ]
+      before_action :authorize_client!, only: [ :create, :update, :destroy ]
 
       def index
         if current_user_api&.client?
@@ -29,7 +29,7 @@ module Api
         @project = current_user_api.projects.build(project_params.except(:skill_ids, :new_skills))
 
         if @project.budget.present? && @project.budget.to_f < 0
-          return render json: { errors: ["Budget must be a non-negative number"] }, status: :unprocessable_entity
+          return render json: { errors: [ "Budget must be a non-negative number" ] }, status: :unprocessable_entity
         end
 
         if @project.save
@@ -48,7 +48,7 @@ module Api
         end
 
         if project_params[:budget].to_f < 0
-          return render json: { errors: ["Budget must be a non-negative number"] }, status: :unprocessable_entity
+          return render json: { errors: [ "Budget must be a non-negative number" ] }, status: :unprocessable_entity
         end
 
 
@@ -92,7 +92,7 @@ module Api
       def process_new_skills(raw_new_skills)
         return [] unless raw_new_skills.present?
 
-        raw_new_skills.to_s.split(',').map(&:strip).reject(&:blank?).map do |skill_name|
+        raw_new_skills.to_s.split(",").map(&:strip).reject(&:blank?).map do |skill_name|
           Skill.find_or_create_by(skill_name: skill_name.downcase).id
         end
       end

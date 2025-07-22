@@ -503,6 +503,8 @@ DEPENDENCIES
   rabl
   rails (~> 7.2.2, >= 7.2.2.1)
   rspec-rails
+  rubocop
+  rubocop-rails
   rubocop-rails-omakase
   sassc
   selenium-webdriver

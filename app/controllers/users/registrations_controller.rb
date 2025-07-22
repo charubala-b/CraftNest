@@ -1,6 +1,6 @@
 class Users::RegistrationsController < Devise::RegistrationsController
-  before_action :configure_sign_up_params, only: [:create]
-  
+  before_action :configure_sign_up_params, only: [ :create ]
+
   def after_sign_up_path_for(resource)
     if resource.freelancer?
       freelancer_dashboard_path
@@ -31,7 +31,7 @@ class Users::RegistrationsController < Devise::RegistrationsController
   protected
 
   def configure_sign_up_params
-    devise_parameter_sanitizer.permit(:sign_up, keys: [:name, :role, :new_skills, skill_ids: []])
+    devise_parameter_sanitizer.permit(:sign_up, keys: [ :name, :role, :new_skills, skill_ids: [] ])
   end
 
   def assign_skills(user, skill_ids)
@@ -42,7 +42,7 @@ class Users::RegistrationsController < Devise::RegistrationsController
   end
 
   def process_new_skills(raw_new_skills)
-    raw_new_skills.to_s.split(',').map(&:strip).reject(&:blank?).map do |skill_name|
+    raw_new_skills.to_s.split(",").map(&:strip).reject(&:blank?).map do |skill_name|
       Skill.find_or_create_by(skill_name: skill_name.downcase).id
     end
   end

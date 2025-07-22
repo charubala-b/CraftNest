@@ -1,7 +1,7 @@
 class Project < ApplicationRecord
   include Ransackable
-  scope :active, -> { where('deadline >= ?', Time.zone.today) }
-scope :completed, -> { where('deadline < ?', Time.zone.today) }
+  scope :active, -> { where("deadline >= ?", Time.zone.today) }
+scope :completed, -> { where("deadline < ?", Time.zone.today) }
 
   scope :ordered_by_deadline, -> { order(deadline: :asc) }
 

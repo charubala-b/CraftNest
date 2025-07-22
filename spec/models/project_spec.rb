@@ -174,7 +174,6 @@ context "when deadline is in the future" do
     expect(project).to be_valid
   end
 end
-
 end
 
   describe "scopes" do

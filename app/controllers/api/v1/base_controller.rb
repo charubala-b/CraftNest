@@ -18,10 +18,9 @@ module Api
 
       def authorize_access_to_contract!(contract = @contract)
         unless contract.client_id == current_user_api&.id || contract.freelancer_id == current_user_api&.id
-          render json: { error: 'You are not authorized to view this contract.' }, status: :unauthorized
+          render json: { error: "You are not authorized to view this contract." }, status: :unauthorized
         end
       end
-      
     end
   end
 end

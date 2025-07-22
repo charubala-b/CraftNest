@@ -1,6 +1,6 @@
 class FreelancerDashboardController < ApplicationController
   before_action :authenticate_user!
-  before_action :set_project_and_client, only: [:chat]
+  before_action :set_project_and_client, only: [ :chat ]
 
   def home
     bid_ids       = current_user.bids.select(:project_id)
@@ -35,7 +35,7 @@ class FreelancerDashboardController < ApplicationController
       flash[:notice] = "Skill added successfully!"
     end
 
-    redirect_to freelancer_dashboard_path(anchor: 'profile')
+    redirect_to freelancer_dashboard_path(anchor: "profile")
   end
 
   def create_custom_skill
@@ -60,7 +60,7 @@ class FreelancerDashboardController < ApplicationController
       end
     end
 
-    redirect_to freelancer_dashboard_path(anchor: 'profile')
+    redirect_to freelancer_dashboard_path(anchor: "profile")
   end
 
   def chat

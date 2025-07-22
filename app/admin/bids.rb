@@ -5,7 +5,7 @@ ActiveAdmin.register Bid do
 
   scope :all, default: true
   scope("Accepted") { |bids| bids.where(accepted: true) }
-  scope("Pending") { |bids| bids.where(accepted: [false, nil]) }
+  scope("Pending") { |bids| bids.where(accepted: [ false, nil ]) }
 
   filter :user
   filter :project

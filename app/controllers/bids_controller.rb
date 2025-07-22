@@ -1,8 +1,8 @@
 class BidsController < ApplicationController
   before_action :authenticate_user!
-  before_action :set_project, only: [:create, :edit, :update, :destroy]
-  before_action :set_bid, only: [:edit, :update, :destroy]
-  before_action :authorize_client!, only: [:accept]
+  before_action :set_project, only: [ :create, :edit, :update, :destroy ]
+  before_action :set_bid, only: [ :edit, :update, :destroy ]
+  before_action :authorize_client!, only: [ :accept ]
 
   def accept
     @bid = Bid.find_by(id: params[:id])

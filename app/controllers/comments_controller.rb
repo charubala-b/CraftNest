@@ -1,16 +1,16 @@
 class CommentsController < ApplicationController
   before_action :authenticate_user!
-  before_action :set_project, only: [:create]
-  before_action :set_comment, only: [:destroy]
+  before_action :set_project, only: [ :create ]
+  before_action :set_comment, only: [ :destroy ]
 
   def create
     @comment = @project.comments.build(comment_params)
     @comment.user = current_user
 
     if @comment.save
-      flash[:notice] = 'Comment posted.'
+      flash[:notice] = "Comment posted."
     else
-      flash[:alert] = 'Failed to post comment.'
+      flash[:alert] = "Failed to post comment."
     end
 
     redirect_to appropriate_dashboard_path
@@ -19,9 +19,9 @@ class CommentsController < ApplicationController
   def destroy
     if @comment.user == current_user || current_user.client? && @comment.project.client_id == current_user.id
       @comment.destroy
-      flash[:notice] = 'Comment deleted.'
+      flash[:notice] = "Comment deleted."
     else
-      flash[:alert] = 'You are not authorized to delete this comment.'
+      flash[:alert] = "You are not authorized to delete this comment."
     end
 
     redirect_to appropriate_dashboard_path

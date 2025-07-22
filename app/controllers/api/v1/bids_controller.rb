@@ -1,8 +1,8 @@
 class Api::V1::BidsController < Api::V1::BaseController
-  before_action :set_bid, only: [:show, :update, :destroy, :accept]
-  before_action :set_project, only: [:create]
-  before_action :authorize_freelancer!, only: [:create, :update, :destroy]
-  before_action :authorize_client!, only: [:accept]
+  before_action :set_bid, only: [ :show, :update, :destroy, :accept ]
+  before_action :set_project, only: [ :create ]
+  before_action :authorize_freelancer!, only: [ :create, :update, :destroy ]
+  before_action :authorize_client!, only: [ :accept ]
 
   def index
     if current_user_api.client?
@@ -84,13 +84,11 @@ class Api::V1::BidsController < Api::V1::BaseController
 
   def set_project
     @project = Project.find_by(id: params[:project_id])
-    return render json: { error: "Project not found." }, status: :not_found unless @project
+    render json: { error: "Project not found." }, status: :not_found unless @project
   end
 
   def set_bid
     @bid = Bid.find_by(id: params[:id])
-    return render json: { error: "Bid not found." }, status: :not_found unless @bid
+    render json: { error: "Bid not found." }, status: :not_found unless @bid
   end
-
-
 end
