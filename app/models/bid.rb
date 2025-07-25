@@ -11,8 +11,6 @@ class Bid < ApplicationRecord
   belongs_to :user
   belongs_to :contract, optional: true
 
-  # has_one :contract, dependent: :destroy
-
   validates :cover_letter, presence: { message: "can't be blank" },
                            length: { minimum: 20, maximum: 100, too_short: "must be at least 20 characters", too_long: "must be at most 100 characters" }
   validates :proposed_price, presence: true, numericality: { greater_than: 0 }

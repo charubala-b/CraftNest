@@ -1,4 +1,3 @@
-# spec/requests/api/v1/reviews_spec.rb
 require 'rails_helper'
 
 RSpec.describe 'API::V1::Reviews', type: :request do

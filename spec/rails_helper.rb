@@ -1,4 +1,8 @@
 require 'simplecov'
+require 'rails-controller-testing'
+
+Rails::Controller::Testing.install
+
 SimpleCov.start 'rails' do
   add_filter '/spec/'
 end
