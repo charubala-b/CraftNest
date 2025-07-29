@@ -109,10 +109,10 @@ ActiveRecord::Schema[7.2].define(version: 2025_07_15_061453) do
   create_table "messages", force: :cascade do |t|
     t.bigint "sender_id", null: false
     t.bigint "receiver_id", null: false
+    t.bigint "project_id", null: false
     t.text "body"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
-    t.bigint "project_id"
     t.index ["project_id"], name: "index_messages_on_project_id"
     t.index ["receiver_id"], name: "index_messages_on_receiver_id"
     t.index ["sender_id"], name: "index_messages_on_sender_id"
@@ -228,7 +228,7 @@ ActiveRecord::Schema[7.2].define(version: 2025_07_15_061453) do
   add_foreign_key "contracts", "projects"
   add_foreign_key "contracts", "users", column: "client_id"
   add_foreign_key "contracts", "users", column: "freelancer_id"
-  add_foreign_key "messages", "projects"
+  add_foreign_key "messages", "projects", on_delete: :cascade
   add_foreign_key "messages", "users", column: "receiver_id"
   add_foreign_key "messages", "users", column: "sender_id"
   add_foreign_key "oauth_access_grants", "oauth_applications", column: "application_id"
