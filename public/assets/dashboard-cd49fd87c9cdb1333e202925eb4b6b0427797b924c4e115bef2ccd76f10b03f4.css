@@ -1,0 +1,260 @@
+/* Reset default styles */
+body, h1, h2, h3, p {
+  margin: 0;
+  padding: 0;
+}
+
+/* Base styles */
+body {
+  background: #f4f6f9;
+  font-family: 'Segoe UI', Roboto, sans-serif;
+  color: #2e2e2e;
+  font-size: 16px;
+  line-height: 1.6;
+}
+
+.dashboard-container {
+  max-width: 1200px;
+  margin: 50px auto;
+  padding: 40px;
+  background: #ffffff;
+  border-radius: 12px;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.08);
+}
+
+.dashboard-title {
+  font-size: 32px;
+  font-weight: 600;
+  margin-bottom: 30px;
+  color: #1d1d1d;
+}
+
+.section-title {
+  font-size: 24px;
+  margin-bottom: 20px;
+  border-bottom: 2px solid #e5e7eb;
+  padding-bottom: 8px;
+  color: #444;
+}
+
+.dashboard-section {
+  margin-bottom: 60px;
+}
+
+/* Cards */
+.project-card,
+.contract-card,
+.bid-card,
+.review-card,
+.comment-card,
+.message-card {
+  background: #f0f5fb;
+  padding: 24px;
+  margin-bottom: 24px;
+  border-radius: 10px;
+  border-left: 5px solid #0069d9;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.04);
+  transition: box-shadow 0.3s ease;
+}
+
+.project-card:hover {
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.08);
+}
+
+.project-title {
+  font-size: 22px;
+  font-weight: 500;
+  color: #0056b3;
+}
+
+.project-description {
+  font-size: 15px;
+  color: #666;
+  margin-bottom: 10px;
+}
+
+/* Forms */
+.form-control,
+textarea,
+select {
+  width: 100%;
+  padding: 12px 14px;
+  margin-top: 8px;
+  margin-bottom: 20px;
+  border: 1px solid #ced4da;
+  border-radius: 8px;
+  box-sizing: border-box;
+  font-size: 15px;
+  transition: border-color 0.3s ease;
+}
+
+.form-control:focus,
+textarea:focus,
+select:focus {
+  border-color: #007bff;
+  outline: none;
+}
+
+/* Buttons */
+.btn {
+  display: inline-block;
+  padding: 10px 18px;
+  margin: 6px 8px 6px 0;
+  font-size: 15px;
+  border-radius: 6px;
+  text-decoration: none;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  border: none;
+}
+
+.btn-primary { background: #007bff; color: #fff; }
+.btn-primary:hover { background: #0056b3; }
+
+.btn-success { background: #28a745; color: #fff; }
+.btn-success:hover { background: #1e7e34; }
+
+.btn-warn { background: #ffc107; color: #212529; }
+.btn-warn:hover { background: #e0a800; }
+
+.btn-dan,
+.dan {
+  background: #dc3545; 
+  color: #fff;
+}
+.btn-dan:hover,
+.dan:hover {
+  background: #c82333;
+}
+
+.btn-secondary {
+  background: #6c757d;
+  color: #fff;
+}
+.btn-secondary:hover {
+  background: #5a6268;
+}
+
+.btn-outline-secondary {
+  background: none;
+  border: 1px solid #6c757d;
+  color: #6c757d;
+}
+.btn-outline-secondary:hover {
+  background: #6c757d;
+  color: #fff;
+}
+
+.btn-outline-danger {
+  background: none;
+  border: 1px solid #dc3545;
+  color: #dc3545;
+}
+.btn-outline-danger:hover {
+  background: #dc3545;
+  color: #fff;
+}
+
+.btn-sm {
+  font-size: 13px;
+  padding: 6px 12px;
+}
+
+/* Tabs */
+.dashboard-tabs {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 24px;
+}
+
+.tab-button {
+  padding: 10px 20px;
+  background: #e9ecef;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: 500;
+  transition: background 0.3s ease;
+}
+.tab-button:hover {
+  background: #d6d8db;
+}
+.tab-button.active {
+  background: #007bff;
+  color: #fff;
+}
+
+.tab-content {
+  display: none;
+}
+
+/* Cards with statuses */
+.accepted-card {
+  background-color: #e7f9ee;
+  border: 1px solid #b1dfbb;
+}
+
+/* Chat UI */
+.chat-list {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.chat-link-card {
+  padding: 16px;
+  border: 1px solid #d4d4d4;
+  border-radius: 10px;
+  background-color: #f9f9f9;
+  transition: background-color 0.2s ease;
+}
+.chat-link-card:hover {
+  background-color: #e2f0ff;
+}
+.chat-link-button {
+  text-decoration: none;
+  color: #007b83;
+  font-weight: 500;
+}
+
+/* Skill Filter */
+.skill-filter {
+  background-color: #e7f1fb;
+  padding: 16px 20px;
+  border-radius: 10px;
+  border: 1px solid #c3d3e3;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.03);
+}
+
+.skill-filter label {
+  font-size: 15px;
+  margin-right: 10px;
+}
+
+.skill-filter .form-select {
+  max-width: 250px;
+  font-size: 14px;
+}
+
+.skill-filter .btn {
+  background-color: #007bff;
+  color: #fff;
+  font-size: 14px;
+  padding: 6px 14px;
+}
+
+@media (max-width: 768px) {
+  .dashboard-container {
+    padding: 20px;
+  }
+  .dashboard-title {
+    font-size: 26px;
+  }
+  .section-title {
+    font-size: 20px;
+  }
+  .tab-button {
+    padding: 8px 12px;
+    font-size: 14px;
+  }
+}
