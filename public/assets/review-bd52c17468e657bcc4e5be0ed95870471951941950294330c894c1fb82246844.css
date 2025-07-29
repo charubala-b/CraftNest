@@ -1,0 +1,69 @@
+/* Flash Messages Styling */
+#flash-messages {
+  position: fixed;
+  max-width: 350px;
+  top: 20px;
+  right: 20px;
+  z-index: 1050;
+}
+
+#flash-messages .alert {
+  padding: 14px 18px;
+  margin-bottom: 12px;
+  border-radius: 8px;
+  font-weight: 500;
+  font-size: 14.5px;
+  line-height: 1.4;
+  box-shadow: 0 6px 14px rgba(0, 0, 0, 0.12);
+  border: 1px solid transparent;
+  transition: opacity 0.3s ease, transform 0.3s ease;
+}
+
+/* Review Form Container */
+.review-form-container {
+  background-color: #f5f9fa;
+  padding: 30px;
+  border-radius: 12px;
+  max-width: 600px;
+  margin: 40px auto;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.06);
+  border: 1px solid #dbe3e6;
+}
+
+/* Form Inputs & Textarea */
+.review-form-container textarea,
+.review-form-container input[type="number"] {
+  width: 100%;
+  margin-bottom: 20px;
+  padding: 12px 14px;
+  border-radius: 8px;
+  border: 1px solid #ced4da;
+  font-size: 15px;
+  transition: border-color 0.3s ease, box-shadow 0.3s ease;
+  background-color: #fff;
+  box-sizing: border-box;
+}
+
+.review-form-container textarea:focus,
+.review-form-container input[type="number"]:focus {
+  outline: none;
+  border-color: #007bff;
+  box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.15);
+}
+
+/* Submit Button */
+.review-form-container .btn {
+  width: 100%;
+  font-weight: 600;
+  font-size: 15px;
+  padding: 12px;
+  border-radius: 8px;
+  background-color: #7700ff;
+  color: #fff;
+  border: none;
+  transition: background 0.3s ease;
+}
+
+.review-form-container .btn:hover {
+  background-color: #0056b3;
+}
