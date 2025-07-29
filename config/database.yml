@@ -81,7 +81,6 @@ test:
 # for a full overview on how database connection configuration can be specified.
 #
 production:
-  <<: *default
-  database: project1_production
-  username: project1
-  password: <%= ENV["PROJECT1_DATABASE_PASSWORD"] %>
+  url: <%= ENV['DATABASE_URL'] %>
+  pool: <%= ENV.fetch("RAILS_MAX_THREADS") { 5 } %>
+

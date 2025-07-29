@@ -13,6 +13,8 @@ class Users::RegistrationsController < Devise::RegistrationsController
     build_resource(sign_up_params.except(:skill_ids, :new_skills))
 
     if resource.save
+      UserMailer.welcome_email(resource).deliver_now
+
       new_skill_ids = process_new_skills(params[:user][:new_skills])
       all_skill_ids = Array(params[:user][:skill_ids]).map(&:to_i) + new_skill_ids
       assign_skills(resource, all_skill_ids.uniq)
